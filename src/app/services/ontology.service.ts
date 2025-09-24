@@ -35,7 +35,6 @@ export class OntologyService {
         ([annotations, classes, roots, directSubclasses, classDependencies]) => {
           // @ts-ignore
           let annotationsMap = new Map(Object.entries(annotations).map(([k,vs],_) => [k, new Map(Object.entries({...vs}))]));
-          console.log(annotationsMap);
           this.ontologyData.set({
             classes,
             // @ts-ignore
