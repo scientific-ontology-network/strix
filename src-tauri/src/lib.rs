@@ -2,45 +2,62 @@
 mod onto;
 mod util;
 
-use horned_owl::model::{ArcStr, Build, Class, ClassExpression, IRI};
-use onto::handler::OntologyContainer;
+use horned_owl::model::{ArcStr};
+use onto::handler::{load};
+use onto::owl::ontology::OntologyContainer;
+use onto::owl::class::ClassDetails;
 use std::collections::{HashMap, HashSet};
+use std::fmt::Error;
 use std::sync::Mutex;
+use semantic_dependency::dependency::base::{DependencyBuilder, OntologySymbol};
+use serde_json::{json, Value};
 use tauri::{Manager, State};
+use crate::util::StrixError;
+
+use semantic_dependency::dependency::growth::GrowthDependency;
 
 #[tauri::command]
-fn load_ontology(state: State<'_, Mutex<OntologyContainer>>, path: &str) {
+fn load_ontology(state: State<'_, Mutex<OntologyContainer<ArcStr>>>, path: &str) {
     let mut state = state.lock().unwrap();
-    state.load(path);
+    println!("Loading ontology from {} ...", path);
+    let o = load(path);
+    println!("done");
+    println!("Processing components...");
+    for c in o.i() {
+        state.handle_component(c);
+    }
+    println!("done");
+    println!("Calculating dependencies...");
+    state.digest_dependencies(GrowthDependency::dep(o.i().into_iter()));
+    println!("done");
 }
 
 #[tauri::command]
 fn get_ontology_structure(
-    state: State<'_, Mutex<OntologyContainer>>,
+    state: State<'_, Mutex<OntologyContainer<ArcStr>>>,
 ) -> (
-    HashMap<String, HashMap<String, HashSet<String>>>,
-    HashSet<String>,
-    HashSet<String>,
+    Vec<String>,
     HashMap<String, HashSet<String>>,
-    HashMap<String, HashSet<String>>,
+    HashMap<String, String>,
 ) {
+    print!("Getting ontology structure ...");
     let state = state.lock().unwrap();
-    (
-        state.annotations.clone(),
-        state.declared_classes.clone(),
-        state.get_roots(),
-        state.direct_subclasses.clone(),
-        state.class_dependencies.clone(),
-    )
+    let res = (
+        state.calculate_roots_classes(),
+        state.calculate_class_hierarchy(),
+        state.calculate_label_map()
+    );
+    println!("done");
+    res
 }
 
 #[tauri::command]
-fn get_direct_subclasses(
-    state: State<'_, Mutex<OntologyContainer>>,
-    iri_rf: String,
-) -> HashSet<String> {
-    let state = state.lock().unwrap();
-    state.direct_subclasses[&iri_rf].clone()
+fn get_class_details(state: State<'_, Mutex<OntologyContainer<ArcStr>>>, iri: &str) -> Result<ClassDetails<ArcStr>, StrixError>{
+    let mut state = state.lock().unwrap();
+    match state.class_details.get(iri) {
+        None => Err(StrixError::InternalStrixError {message:String::from("Class not found")}),
+        Some(cd) => Ok(cd.clone())
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -49,15 +66,15 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
-            app.manage::<Mutex<OntologyContainer>>(
+            app.manage::<Mutex<OntologyContainer<ArcStr>>>(
                 Mutex::new(OntologyContainer::default()),
             );
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             load_ontology,
-            get_direct_subclasses,
-            get_ontology_structure
+            get_ontology_structure,
+            get_class_details,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

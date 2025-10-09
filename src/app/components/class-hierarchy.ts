@@ -9,9 +9,9 @@ interface NodeVM { id: string; label: string; }
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="p-3">
-      <div class="text-xs text-slate-500 mb-2" *ngIf="!this.ontologyData.classes?.length">No classes loaded.</div>
-      <ul class="space-y-1" *ngIf="this.ontologyData.classes?.length">
+    <div class="p-3 flex flex-col h-full">
+      <div class="text-xs text-slate-500 mb-2" *ngIf="!this.ontologyData.roots?.length">No classes loaded.</div>
+      <ul class="space-y-1 flex-1 overflow-y-auto" *ngIf="this.ontologyData.roots?.length">
         <ng-container *ngFor="let id of this.ontologyData.roots; trackBy: track">
           <ng-template [ngTemplateOutlet]="nodeTpl" [ngTemplateOutletContext]="{ id: id, depth: 0 }" />
         </ng-container>
@@ -19,10 +19,11 @@ interface NodeVM { id: string; label: string; }
     </div>
 
     <ng-template #nodeTpl let-id="id" let-depth="depth">
-      <li class="group">
-        <div class="flex items-center gap-1 rounded px-1 py-0.5 cursor-pointer select-none"
+      <li class="group relative">
+        <div class="flex items-center gap-1 rounded px-1 py-0.5 cursor-pointer select-none relative
+             before:content-[''] before:absolute before:top-1/2 before:-left-3 before:w-3 before:border-t before:border-slate-300"
              [class.bg-primary-50]="selectedId===id"
-             [style.paddingLeft.px]="8 + depth*12"
+             [style.paddingLeft.px]="depth"
              (click)="select(id)">
           <button class="size-4 flex items-center justify-center text-slate-500 hover:text-slate-700"
                   (click)="toggle(id); $event.stopPropagation()"
@@ -31,7 +32,7 @@ interface NodeVM { id: string; label: string; }
           </button>
           <span class="text-sm text-slate-800 truncate" [class.font-semibold]="selectedId===id">{{ label(id) }}</span>
         </div>
-        <ul *ngIf="expanded.has(id)" class="mt-0.5">
+        <ul *ngIf="expanded.has(id)" class="ml-2 pl-3 border-l border-slate-300 space-y-0.5">
           <ng-container *ngFor="let cid of children(id); trackBy: track">
             <ng-template [ngTemplateOutlet]="nodeTpl" [ngTemplateOutletContext]="{ id: cid, depth: depth+1 }" />
           </ng-container>
@@ -41,13 +42,7 @@ interface NodeVM { id: string; label: string; }
   `,
 })
 export class ClassHierarchyComponent {
-  @Input() ontologyData: OntologyData = {
-    classes: [],
-    annotations: new Map(),
-    roots: [],
-    directSubclasses: new Map(),
-    classDependencies: new Map()
-  };
+  @Input() ontologyData!: OntologyData;
   @Input() selectedId: string | null = null;
   @Input() searchQuery = '';
   @Output() selected = new EventEmitter<string>();
@@ -57,7 +52,7 @@ export class ClassHierarchyComponent {
     const q = (this.searchQuery || '').trim().toLowerCase();
     if (!q) return new Set<string>();
     const set = new Set<string>();
-    for (const c of this.ontologyData.classes) if (this.label(c).toLowerCase().includes(q) || (c ?? '').toLowerCase().includes(q)) set.add(c);
+    for (const c of this.ontologyData.roots) if (this.label(c).toLowerCase().includes(q) || (c ?? '').toLowerCase().includes(q)) set.add(c);
     return set;
   });
 
@@ -71,7 +66,7 @@ export class ClassHierarchyComponent {
 
   track = (_: number, id: string) => id;
   protected label(id: string){
-    let label = this.ontologyData.annotations.get(id)?.get("http://www.w3.org/2000/01/rdf-schema#label") ?? id;
+    let label = this.ontologyData.labels.get(id)?? id;
     //console.log(id, label);
     return label;
   }
@@ -105,7 +100,7 @@ export class ClassHierarchyComponent {
     // naive ancestor expansion by reverse scanning parents from byId
     // Build reverse map on-the-fly
     const parentMap = new Map<string, string[]>();
-    for (const c of this.ontologyData.classes) for (const p of this.ontologyData.directSubclasses.get(c) ?? []) {
+    for (const c of this.ontologyData.roots) for (const p of this.ontologyData.directSubclasses.get(c) ?? []) {
       if (!parentMap.has(c)) parentMap.set(c, []);
       parentMap.get(c)!.push(p);
     }

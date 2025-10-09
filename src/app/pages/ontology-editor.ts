@@ -2,7 +2,7 @@ import {Component, computed, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {ClassHierarchyComponent} from '../components/class-hierarchy';
-import {ClassDetailComponent} from '../components/class-detail';
+import {ClassDetailComponent} from '../components/class/class-detail';
 import {OntologyService} from '../services/ontology.service';
 import {StorageService} from '../services/storage.service';
 import {invoke} from "@tauri-apps/api/core";
@@ -26,7 +26,6 @@ import {invoke} from "@tauri-apps/api/core";
               </div>
             </div>
             <nav class="flex items-center gap-2">
-              <button class="btn" (click)="newOntology()">New</button>
               <button class="btn" (click)="open()">Open…</button>
             </nav>
           </div>
@@ -49,10 +48,13 @@ import {invoke} from "@tauri-apps/api/core";
             />
           </aside>
           <section class="rounded-xl border border-slate-200 bg-white/80 backdrop-blur min-h-[420px]">
-            <app-class-detail 
-                [cls]="selected()"
-                [ontologyData]="this.svc.ontologyData()"
-            />
+            @if (selected()) {
+              <app-class-detail 
+                  [iri]="selected()!"
+                  [labelMap]="svc.ontologyData().labels"
+                  (onIriClick)="svc.select($event)"
+              />
+            }
           </section>
         </div>
         <div class="mt-4 text-xs text-slate-500">
@@ -75,12 +77,6 @@ export class OntologyEditorComponent {
   readonly selected = computed(() => {
     return this.svc.selectedClassId();
   });
-
-  hasData = computed(() => !!this.svc.ontologyData());
-
-  async newOntology() {
-
-  }
 
   async open() {
     const path = await this.storage.openTextFile();
