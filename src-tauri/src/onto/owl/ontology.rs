@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::mem::needs_drop;
 use horned_owl::model::{AnnotatedComponent, Annotation, AnnotationAssertion, AnnotationProperty, AnnotationSubject, AnnotationValue, AnonymousIndividual, AsymmetricObjectProperty, Class, ClassAssertion, ClassExpression, Component, DataProperty, DataPropertyDomain, DataPropertyRange, DataRange, Datatype, DatatypeDefinition, DeclareAnnotationProperty, DeclareClass, DeclareDataProperty, DeclareDatatype, DeclareNamedIndividual, DeclareObjectProperty, DifferentIndividuals, DisjointClasses, DisjointDataProperties, DisjointObjectProperties, DisjointUnion, EquivalentClasses, EquivalentDataProperties, EquivalentObjectProperties, ForIRI, FunctionalDataProperty, FunctionalObjectProperty, Import, Individual, InverseFunctionalObjectProperty, InverseObjectProperties, IrreflexiveObjectProperty, Literal, NamedIndividual, ObjectProperty, ObjectPropertyDomain, ObjectPropertyExpression, ObjectPropertyRange, OntologyAnnotation, OntologyID, ReflexiveObjectProperty, SameIndividual, SubClassOf, SubDataPropertyOf, SubObjectPropertyExpression, SubObjectPropertyOf, SymmetricObjectProperty, TransitiveObjectProperty, IRI};
 use semantic_dependency::dependency::base::{DependencyMap, OntologySymbol};
 use semantic_dependency::dependency::growth::GrowthDependency;
@@ -563,27 +564,59 @@ impl<T: ForIRI + Default> OntologyContainer<T> {
         //self.dependencies = GrowthDependency::dep(self.ontology.i().into_iter());
     }
 
-    pub fn calculate_roots_classes(&self) -> Vec<String>{
-        let classes = self.class_details.keys().cloned().collect::<HashSet<_>>();
-        let sub_classes = &self.class_details.values().flat_map(
-            |cd| cd.superclass_of.iter().flat_map(|ce| _derive_classes_from_class_expression(&ce).iter().map(|c| c.to_string()).collect::<Vec<String>>())).collect();
+    pub fn calculate_roots_classes(subclass_map: HashMap<String, HashSet<String>>) -> Vec<String>{
+        let classes = subclass_map.keys().cloned().collect::<HashSet<_>>();
+        let sub_classes = subclass_map.values().flatten().cloned().collect();
         classes.difference(&sub_classes).cloned().collect()
+    }
+
+    fn derive_superclasses_of_class_expression(ce: &ClassExpression<T>) -> Vec<&Class<T>> {
+        match ce {
+            ClassExpression::Class(c) => Vec::from([c]),
+            ClassExpression::ObjectIntersectionOf(cs) => {
+                let c = cs.iter().flat_map(|c| Self::derive_superclasses_of_class_expression(c)).collect();
+                c
+            },
+            _ => Vec::new()
+        }
+    }
+
+    fn derive_subclasses_of_class_expression(ce: &ClassExpression<T>) -> Vec<&Class<T>> {
+        match ce {
+            ClassExpression::Class(c) => Vec::from([c]),
+            ClassExpression::ObjectUnionOf(cs) => cs.iter().flat_map(|c| Self::derive_subclasses_of_class_expression(c)).collect(),
+            _ => Vec::new()
+        }
     }
 
     pub fn calculate_class_hierarchy(&self) -> HashMap<String, HashSet<String>>{
         let mut map =HashMap::new();
+        println!("Calculating class hierarchy");
+        let mut b = true;
         for c in  self.class_details.keys(){
+            let c_iri = c.to_string();
+            if c.as_str() == "https://openenergyplatform.org/ontology/oeo/OEO_00260003" {
+                b = false;
+            } else {
+                b = true;
+            }
             let details = self.class_details.get(c).unwrap();
-            let mut superclasses = HashSet::new();
-            for ce in details.superclass_of.iter(){
-                for c in _derive_classes_from_class_expression(&ce).iter(){
-                    superclasses.insert(c.to_string());
+            let subclasses: HashSet<String> = details.superclass_of.iter().flat_map(Self::derive_subclasses_of_class_expression).map(|x|x.to_string()).collect();
+            if !subclasses.is_empty() {
+                let s = map.entry(c.clone()).or_insert_with(HashSet::new);
+                for x in subclasses.iter() {
+                    s.insert(x.clone());
                 }
             }
-            map.insert(c.to_string(), superclasses);
+            for d in details.subclass_of.iter().flat_map(Self::derive_superclasses_of_class_expression) {
+                let d_iri = d.to_string();
+                map.entry(d.to_string()).or_insert_with(HashSet::new).insert(c.clone());
+            }
         };
         map
     }
+
+
 
     fn extract_labels<S, F>(details: &S, get_annotations: F) -> Option<String>
     where F: FnOnce (&S,) -> &HashMap<String, Vec<AnnotationValue<T>>>{

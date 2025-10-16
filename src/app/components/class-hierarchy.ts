@@ -10,12 +10,15 @@ interface NodeVM { id: string; label: string; }
   imports: [CommonModule],
   template: `
     <div class="p-3 flex flex-col h-full">
-      <div class="text-xs text-slate-500 mb-2" *ngIf="!this.ontologyData.roots?.length">No classes loaded.</div>
-      <ul class="space-y-1 flex-1 overflow-y-auto" *ngIf="this.ontologyData.roots?.length">
-        <ng-container *ngFor="let id of this.ontologyData.roots; trackBy: track">
-          <ng-template [ngTemplateOutlet]="nodeTpl" [ngTemplateOutletContext]="{ id: id, depth: 0 }" />
-        </ng-container>
-      </ul>
+      @if(!this.ontologyData.roots.length){
+        <div class="text-xs text-slate-500 mb-2">No classes loaded.</div>
+      } @else {
+        <ul class="space-y-1 flex-1 overflow-y-auto">
+          @for(id of this.ontologyData.roots; track $index){
+            <ng-template [ngTemplateOutlet]="nodeTpl" [ngTemplateOutletContext]="{ id: id, depth: 0 }" />
+          }
+        </ul>
+      }
     </div>
 
     <ng-template #nodeTpl let-id="id" let-depth="depth">
@@ -25,18 +28,21 @@ interface NodeVM { id: string; label: string; }
              [class.bg-primary-50]="selectedId===id"
              [style.paddingLeft.px]="depth"
              (click)="select(id)">
-          <button class="size-4 flex items-center justify-center text-slate-500 hover:text-slate-700"
-                  (click)="toggle(id); $event.stopPropagation()"
-                  *ngIf="children(id).length>0">
-            <svg class="size-3 transition-transform" [class.rotate-90]="expanded.has(id)" viewBox="0 0 20 20" fill="currentColor"><path d="M7 5l6 5-6 5V5z"/></svg>
-          </button>
+          @if(children(id).length>0) {
+            <button class="size-4 flex items-center justify-center text-slate-500 hover:text-slate-700"
+                    (click)="toggle(id); $event.stopPropagation()">
+              <svg class="size-3 transition-transform" [class.rotate-90]="expanded.has(id)" viewBox="0 0 20 20" fill="currentColor"><path d="M7 5l6 5-6 5V5z"/></svg>
+            </button>
+          }
           <span class="text-sm text-slate-800 truncate" [class.font-semibold]="selectedId===id">{{ label(id) }}</span>
         </div>
-        <ul *ngIf="expanded.has(id)" class="ml-2 pl-3 border-l border-slate-300 space-y-0.5">
-          <ng-container *ngFor="let cid of children(id); trackBy: track">
-            <ng-template [ngTemplateOutlet]="nodeTpl" [ngTemplateOutletContext]="{ id: cid, depth: depth+1 }" />
-          </ng-container>
-        </ul>
+        @if(expanded.has(id)) {
+          <ul class="ml-2 pl-3 border-l border-slate-300 space-y-0.5">
+            @for(cid of children(id); track $index) {
+              <ng-template [ngTemplateOutlet]="nodeTpl" [ngTemplateOutletContext]="{ id: cid, depth: depth+1 }" />
+            }
+          </ul>
+        }
       </li>
     </ng-template>
   `,
@@ -97,10 +103,10 @@ export class ClassHierarchyComponent {
   }
 
   private expandAncestors(id: string) {
-    // naive ancestor expansion by reverse scanning parents from byId
+    // naive ancestor expansion by reverse scanning parents from id
     // Build reverse map on-the-fly
     const parentMap = new Map<string, string[]>();
-    for (const c of this.ontologyData.roots) for (const p of this.ontologyData.directSubclasses.get(c) ?? []) {
+    for (const p of this.ontologyData.roots) for (const c of this.ontologyData.directSubclasses.get(p) ?? []) {
       if (!parentMap.has(c)) parentMap.set(c, []);
       parentMap.get(c)!.push(p);
     }

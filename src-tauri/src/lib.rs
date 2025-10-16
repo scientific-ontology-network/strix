@@ -17,7 +17,11 @@ use crate::util::StrixError;
 use semantic_dependency::dependency::growth::GrowthDependency;
 
 #[tauri::command]
-fn load_ontology(state: State<'_, Mutex<OntologyContainer<ArcStr>>>, path: &str) {
+fn load_ontology(state: State<'_, Mutex<OntologyContainer<ArcStr>>>, path: &str) -> (
+    Vec<String>,
+    HashMap<String, HashSet<String>>,
+    HashMap<String, String>,
+) {
     let mut state = state.lock().unwrap();
     println!("Loading ontology from {} ...", path);
     let o = load(path);
@@ -28,22 +32,13 @@ fn load_ontology(state: State<'_, Mutex<OntologyContainer<ArcStr>>>, path: &str)
     }
     println!("done");
     println!("Calculating dependencies...");
-    state.digest_dependencies(GrowthDependency::dep(o.i().into_iter()));
+    let dependencies = GrowthDependency::build_dependencies(o.i().into_iter());
+    let cleaned_dependencies = GrowthDependency::remove_supers(dependencies, o.i().into_iter());
+    state.digest_dependencies(cleaned_dependencies);
     println!("done");
-}
-
-#[tauri::command]
-fn get_ontology_structure(
-    state: State<'_, Mutex<OntologyContainer<ArcStr>>>,
-) -> (
-    Vec<String>,
-    HashMap<String, HashSet<String>>,
-    HashMap<String, String>,
-) {
-    print!("Getting ontology structure ...");
-    let state = state.lock().unwrap();
+    let subclass_map = state.calculate_class_hierarchy();
     let res = (
-        state.calculate_roots_classes(),
+        OntologyContainer::<ArcStr>::calculate_roots_classes(subclass_map),
         state.calculate_class_hierarchy(),
         state.calculate_label_map()
     );
@@ -73,7 +68,6 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             load_ontology,
-            get_ontology_structure,
             get_class_details,
         ])
         .run(tauri::generate_context!())

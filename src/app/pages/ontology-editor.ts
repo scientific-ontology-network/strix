@@ -51,7 +51,7 @@ import {invoke} from "@tauri-apps/api/core";
             @if (selected()) {
               <app-class-detail 
                   [iri]="selected()!"
-                  [labelMap]="svc.ontologyData().labels"
+                  [ontologyData]="svc.ontologyData"
                   (onIriClick)="svc.select($event)"
               />
             }
@@ -82,10 +82,7 @@ export class OntologyEditorComponent {
     const path = await this.storage.openTextFile();
     if (!path) return;
     try {
-      invoke('load_ontology', {path: path}).then(
-          // @ts-ignore
-          this.svc.update()
-      );
+      this.svc.load(path);
     } catch (e: any) {
       alert('Failed to load ontology: ' + (e?.message ?? e));
     }

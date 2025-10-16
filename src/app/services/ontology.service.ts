@@ -24,13 +24,13 @@ export class OntologyService {
     return d.roots;
   });
 
-  update() {
-
-    invoke('get_ontology_structure').then(
+  load(path: string) {
+      invoke('load_ontology', {path: path}).then(
         // @ts-ignore
         ([roots, directSubclasses,labels, ]) => {
           // @ts-ignore
           let labelMap = new Map(Object.entries(labels));
+          // @ts-ignore
           this.ontologyData.set({
             // @ts-ignore
             labels: labelMap,
