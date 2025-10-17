@@ -3433,14 +3433,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semantic_dependency"
-version = "0.1.0"
-dependencies = [
- "horned-owl",
- "itertools",
-]
-
-[[package]]
 name = "semver"
 version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3777,14 +3769,23 @@ name = "strix"
 version = "0.1.0"
 dependencies = [
  "horned-owl",
- "semantic_dependency",
  "serde",
  "serde_json",
+ "strix-roost",
  "tauri",
  "tauri-build",
  "tauri-plugin-dialog",
  "tauri-plugin-opener",
  "ts-rs",
+]
+
+[[package]]
+name = "strix-roost"
+version = "0.1.0"
+dependencies = [
+ "horned-owl",
+ "itertools",
+ "serde",
 ]
 
 [[package]]

@@ -1,5 +1,5 @@
 use horned_owl::model::*;
-use semantic_dependency::dependency::base::OntologySymbol;
+use strix_roost::dependency::base::OntologySymbol;
 use serde::Serialize;
 use ts_rs::TS;
 

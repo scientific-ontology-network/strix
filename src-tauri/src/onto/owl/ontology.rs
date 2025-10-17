@@ -1,8 +1,8 @@
 use std::collections::{HashMap, HashSet};
 use std::mem::needs_drop;
 use horned_owl::model::{AnnotatedComponent, Annotation, AnnotationAssertion, AnnotationProperty, AnnotationSubject, AnnotationValue, AnonymousIndividual, AsymmetricObjectProperty, Class, ClassAssertion, ClassExpression, Component, DataProperty, DataPropertyDomain, DataPropertyRange, DataRange, Datatype, DatatypeDefinition, DeclareAnnotationProperty, DeclareClass, DeclareDataProperty, DeclareDatatype, DeclareNamedIndividual, DeclareObjectProperty, DifferentIndividuals, DisjointClasses, DisjointDataProperties, DisjointObjectProperties, DisjointUnion, EquivalentClasses, EquivalentDataProperties, EquivalentObjectProperties, ForIRI, FunctionalDataProperty, FunctionalObjectProperty, Import, Individual, InverseFunctionalObjectProperty, InverseObjectProperties, IrreflexiveObjectProperty, Literal, NamedIndividual, ObjectProperty, ObjectPropertyDomain, ObjectPropertyExpression, ObjectPropertyRange, OntologyAnnotation, OntologyID, ReflexiveObjectProperty, SameIndividual, SubClassOf, SubDataPropertyOf, SubObjectPropertyExpression, SubObjectPropertyOf, SymmetricObjectProperty, TransitiveObjectProperty, IRI};
-use semantic_dependency::dependency::base::{DependencyMap, OntologySymbol};
-use semantic_dependency::dependency::growth::GrowthDependency;
+use strix_roost::dependency::base::{DependencyMap, OntologySymbol};
+use strix_roost::dependency::growth::GrowthDependency;
 use serde::{Serialize, Serializer};
 use serde::ser::SerializeStruct;
 use crate::onto::owl::annotation::{wrap_annotations, AnnotationPropertyDetails};

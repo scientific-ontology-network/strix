@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use horned_owl::model::{AnnotationValue, Class, ClassExpression, ForIRI, Individual};
-use semantic_dependency::dependency::base::OntologySymbol;
+use strix_roost::dependency::base::OntologySymbol;
 use serde::{Serialize, Serializer};
 use serde::ser::SerializeStruct;
 use ts_rs::TS;

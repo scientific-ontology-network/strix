@@ -1,20 +1,19 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 mod onto;
-mod util;
 
 use horned_owl::model::{ArcStr};
-use onto::handler::{load};
+use strix_roost::ontology::io::load_set_ontology;
 use onto::owl::ontology::OntologyContainer;
 use onto::owl::class::ClassDetails;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Error;
 use std::sync::Mutex;
-use semantic_dependency::dependency::base::{DependencyBuilder, OntologySymbol};
+use strix_roost::dependency::base::{DependencyBuilder, OntologySymbol};
 use serde_json::{json, Value};
 use tauri::{Manager, State};
-use crate::util::StrixError;
+use strix_roost::util::error::StrixError;
 
-use semantic_dependency::dependency::growth::GrowthDependency;
+use strix_roost::dependency::growth::GrowthDependency;
 
 #[tauri::command]
 fn load_ontology(state: State<'_, Mutex<OntologyContainer<ArcStr>>>, path: &str) -> (
@@ -24,7 +23,7 @@ fn load_ontology(state: State<'_, Mutex<OntologyContainer<ArcStr>>>, path: &str)
 ) {
     let mut state = state.lock().unwrap();
     println!("Loading ontology from {} ...", path);
-    let o = load(path);
+    let o = load_set_ontology(path);
     println!("done");
     println!("Processing components...");
     for c in o.i() {
