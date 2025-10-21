@@ -7,8 +7,7 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[env]
-TS_RS_EXPORT_DIR = "../src/app/bindings"
+
 
 [lib]
 # The `_lib` suffix may seem redundant but it is necessary
