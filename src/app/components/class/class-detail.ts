@@ -45,7 +45,7 @@ import {OntologySymbolView} from "../../bindings/OntologySymbolView";
             <h3 class="text-sm font-medium text-slate-600 uppercase tracking-wider">Annotations</h3>
             <div class="mt-2 rounded-md border border-slate-200 divide-y">
 
-              @if (this.classDetails()?.annotations?.size && this.classDetails()?.annotations?.size! > 0) {
+              @if (!this.classDetails()?.annotations?.size) {
                 <div class="px-3 py-2 text-sm text-slate-500">No annotations</div>
               } @else {
                 @for (anno of this.classDetails()?.annotations!.entries(); track $index) {
