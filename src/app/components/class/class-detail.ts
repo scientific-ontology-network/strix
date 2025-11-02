@@ -51,8 +51,11 @@ import {OntologySymbolView} from "../../bindings/OntologySymbolView";
               } @else {
                 @for (anno of this.classDetails()?.annotations!.entries(); track $index) {
                 <div class="px-3 py-2">
-                  <div class="text-sm font-medium text-slate-800">{{ anno[0] }}</div>
-                  @for(v of anno[1]; track $index) {
+                  <b>
+                    <div class="text-sm font-medium text-slate-800">{{ ontologyData().labels.get(anno[0].toString()) ?? anno[0] }}</div>
+                  </b>
+                  
+                    @for(v of anno[1]; track v) {
                     <div class="px-3 py-2">
 
                         <div class="text-xs text-slate-500" ngPreserveWhitespaces style="white-space: pre">{{ renderLiteral(v, ontologyData().labels)}}</div>
