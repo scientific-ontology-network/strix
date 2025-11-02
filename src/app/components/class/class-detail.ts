@@ -24,6 +24,7 @@ import {OntologySymbolView} from "../../bindings/OntologySymbolView";
   selector: 'app-class-detail',
   standalone: true,
   imports: [CommonModule, ClassExpressionComponent, ObjectPropertyExpressionComponent],
+  preserveWhitespaces: true,
   template: `
     <div class="p-6">
       @if (loading()) {
@@ -53,9 +54,13 @@ import {OntologySymbolView} from "../../bindings/OntologySymbolView";
                   <div class="text-sm font-medium text-slate-800">{{ anno[0] }}</div>
                   @for(v of anno[1]; track $index) {
                     <div class="px-3 py-2">
-                      <div class="text-xs text-slate-500">{{ renderLiteral(v, ontologyData().labels) }}</div>
+
+                        <div class="text-xs text-slate-500" ngPreserveWhitespaces style="white-space: pre">{{ renderLiteral(v, ontologyData().labels)}}</div>
+                      
                     </div>
-                  }
+                    }
+                  
+                  
                 </div>
                 }
               }
@@ -187,3 +192,5 @@ function renderLiteral(literal: LiteralView, labelMap: Map<string, string>): str
       return '<unknown literal>';
   }
 }
+
+
