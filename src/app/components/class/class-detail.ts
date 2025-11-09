@@ -19,7 +19,6 @@ import {v4 as uuidv4} from 'uuid';
 import {OntologySymbolView} from "../../bindings/OntologySymbolView";
 
 
-
 @Component({
   selector: 'app-class-detail',
   standalone: true,
@@ -57,8 +56,7 @@ import {OntologySymbolView} from "../../bindings/OntologySymbolView";
                   
                     @for(v of anno[1]; track v) {
                     <div class="px-3 py-2">
-
-                        <div class="text-xs text-slate-500" ngPreserveWhitespaces style="white-space: pre">{{ renderLiteral(v, ontologyData().labels)}}</div>
+                        <div class="text-xs text-slate-500" ngPreserveWhitespaces style="white-space: pre">{{ addLineBreaks(renderLiteral(v, ontologyData().labels))}}</div>
                       
                     </div>
                     }
@@ -179,7 +177,7 @@ export class ClassDetailComponent implements OnChanges{
   }
 
   protected readonly renderLiteral = renderLiteral;
-
+  protected readonly addLineBreaks = addLineBreaks;
   protected readonly console = console;
 }
 
@@ -196,4 +194,27 @@ function renderLiteral(literal: LiteralView, labelMap: Map<string, string>): str
   }
 }
 
+function addLineBreaks(text: string){
+    
+  if(text.includes("\n")){
+    return text;
+  }
+
+  var result = "";
+  
+  while(text != "") {
+
+    var i = 100;
+    while(text.charAt(i) != ' ' && text.length > i && i > 0){
+    i--;
+    }
+    
+    
+    result += text.slice(0,i);
+    result += "\n";
+    text = text.substring(i);
+  }
+
+  return result;
+}
 
