@@ -204,7 +204,7 @@ function addLineBreaks(text: string){
   
   while(text != "") {
 
-    var i = 100;
+    var i = 80;
     while(text.charAt(i) != ' ' && text.length > i && i > 0){
     i--;
     }
