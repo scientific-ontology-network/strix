@@ -1,13 +1,15 @@
 import { Component, EventEmitter, Input, Output, Signal, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {OntologyData} from '../services/ontology.service';
+import {ClassExpressionComponent} from "./class/class-expression";
+import {AnnotationValueComponent, getUntaggedStringFromAnnotationValue} from "./annotation/annotation-value";
 
 interface NodeVM { id: string; label: string; }
 
 @Component({
   selector: 'app-class-hierarchy',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AnnotationValueComponent],
   template: `
     <div class="p-3 flex flex-col h-full">
       @if(!this.ontologyData.roots.length){
@@ -34,7 +36,9 @@ interface NodeVM { id: string; label: string; }
               <svg class="size-3 transition-transform" [class.rotate-90]="expanded.has(id)" viewBox="0 0 20 20" fill="currentColor"><path d="M7 5l6 5-6 5V5z"/></svg>
             </button>
           }
-          <span class="text-sm text-slate-800 truncate" [class.font-semibold]="selectedId===id">{{ label(id) }}</span>
+          <span class="text-sm text-slate-800 truncate" [class.font-semibold]="selectedId===id">
+            <app-annotation-value [expression]="label(id)" [labelMap]="ontologyData.labels" (onIriClick)="selected.emit($event)"/>
+          </span>
         </div>
         @if(expanded.has(id)) {
           <ul class="ml-2 pl-3 border-l border-slate-300 space-y-0.5">
@@ -58,7 +62,7 @@ export class ClassHierarchyComponent {
     const q = (this.searchQuery || '').trim().toLowerCase();
     if (!q) return new Set<string>();
     const set = new Set<string>();
-    for (const c of this.ontologyData.roots) if (this.label(c).toLowerCase().includes(q) || (c ?? '').toLowerCase().includes(q)) set.add(c);
+    for (const c of this.ontologyData.roots) if (getUntaggedStringFromAnnotationValue(this.label(c)).toLowerCase().includes(q) || (c ?? '').toLowerCase().includes(q)) set.add(c);
     return set;
   });
 
@@ -78,7 +82,7 @@ export class ClassHierarchyComponent {
   }
 
   children(id: string): string[] {
-    const out = this.ontologyData.directSubclasses.get(id) ?? [];
+    const out = this.ontologyData.isAssertedSuperclassOf.get(id) ?? [];
     const q = (this.searchQuery || '').trim().toLowerCase();
     if (!q) return out;
 
@@ -88,9 +92,9 @@ export class ClassHierarchyComponent {
 
   private isVisible(c: string, q: string): boolean {
     if (!c) return false;
-    const here = this.label(c)?.toLowerCase().includes(q) || (c ?? '').toLowerCase().includes(q);
+    const here = getUntaggedStringFromAnnotationValue(this.label(c))?.toLowerCase().includes(q) || (c ?? '').toLowerCase().includes(q);
     if (here) return true;
-    const kids = this.ontologyData.directSubclasses.get(c) ?? [];
+    const kids = this.ontologyData.isAssertedSuperclassOf.get(c) ?? [];
     return kids.some(k => this.isVisible(k, q));
   }
 
@@ -106,7 +110,7 @@ export class ClassHierarchyComponent {
     // naive ancestor expansion by reverse scanning parents from id
     // Build reverse map on-the-fly
     const parentMap = new Map<string, string[]>();
-    for (const p of this.ontologyData.roots) for (const c of this.ontologyData.directSubclasses.get(p) ?? []) {
+    for (const p of this.ontologyData.roots) for (const c of this.ontologyData.isAssertedSuperclassOf.get(p) ?? []) {
       if (!parentMap.has(c)) parentMap.set(c, []);
       parentMap.get(c)!.push(p);
     }

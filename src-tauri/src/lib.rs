@@ -1,57 +1,37 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 mod onto;
 
-use horned_owl::model::{ArcStr};
+use horned_owl::model::{ArcStr, Build, ForIRI, Ontology, IRI};
 use strix_roost::ontology::io::load_set_ontology;
-use onto::owl::ontology::OntologyContainer;
 use onto::owl::class::ClassDetails;
-use std::collections::{HashMap, HashSet};
-use std::fmt::Error;
-use std::sync::Mutex;
-use strix_roost::dependency::base::{DependencyBuilder, OntologySymbol};
+use std::sync::{Arc, Mutex};
+use std::time::SystemTime;
+use horned_owl::ontology::set::SetOntology;
+use strix_roost::dependency::base::{DependencyBuilder, DependencyMap, OntologySymbol};
 use serde_json::{json, Value};
 use tauri::{Manager, State};
 use strix_roost::util::error::StrixError;
+use crate::onto::owl::hierarchy::ClassHierarchy;
+use crate::onto::state::StrixState;
 
-use strix_roost::dependency::growth::GrowthDependency;
 
 #[tauri::command]
-fn load_ontology(state: State<'_, Mutex<OntologyContainer<ArcStr>>>, path: &str) -> (
-    Vec<String>,
-    HashMap<String, HashSet<String>>,
-    HashMap<String, String>,
-) {
-    let mut state = state.lock().unwrap();
-    println!("Loading ontology from {} ...", path);
-    let o = load_set_ontology(path);
-    println!("done");
-    println!("Processing components...");
-    for c in o.i() {
-        state.handle_component(c);
-    }
-    println!("done");
-    println!("Calculating dependencies...");
-    let dependencies = GrowthDependency::build_dependencies(o.i().into_iter());
-    let cleaned_dependencies = GrowthDependency::remove_supers(dependencies, o.i().into_iter());
-    state.digest_dependencies(cleaned_dependencies);
-    println!("done");
-    let subclass_map = state.calculate_class_hierarchy();
-    let res = (
-        OntologyContainer::<ArcStr>::calculate_roots_classes(subclass_map),
-        state.calculate_class_hierarchy(),
-        state.calculate_label_map()
-    );
-    println!("done");
-    res
+fn load_ontology<'a>(raw_state: State<'a, Mutex<StrixState<ArcStr>>>, path: &str) -> Result<ClassHierarchy, StrixError>{
+    let mut state = raw_state.lock().unwrap();
+    let start = SystemTime::now();
+    state.set_ontology(load_set_ontology(path));
+    println!("Ontology loaded in {:?}", start.elapsed().unwrap());
+    let hier = state.get_hierarchy();
+
+    Ok(hier)
 }
 
 #[tauri::command]
-fn get_class_details(state: State<'_, Mutex<OntologyContainer<ArcStr>>>, iri: &str) -> Result<ClassDetails<ArcStr>, StrixError>{
+fn get_class_details<'a>(state: State<'a, Mutex<StrixState<ArcStr>>>, s: &str) -> Result<ClassDetails<ArcStr>, StrixError>{
     let mut state = state.lock().unwrap();
-    match state.class_details.get(iri) {
-        None => Err(StrixError::InternalStrixError {message:String::from("Class not found")}),
-        Some(cd) => Ok(cd.clone())
-    }
+    let b_arc = Build::new_arc();
+    let iri = b_arc.iri(s.to_string());
+    Ok(state.get_class_details(&iri.underlying()))
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -60,8 +40,8 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
-            app.manage::<Mutex<OntologyContainer<ArcStr>>>(
-                Mutex::new(OntologyContainer::default()),
+            app.manage::<Mutex<StrixState<ArcStr>>>(
+                Mutex::new(StrixState::default()),
             );
             Ok(())
         })

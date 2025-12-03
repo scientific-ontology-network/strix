@@ -17,13 +17,14 @@ import {ClassExpressionComponent, ObjectPropertyExpressionComponent} from "./cla
 import {LiteralView} from "../../bindings/LiteralView";
 import {v4 as uuidv4} from 'uuid';
 import {OntologySymbolView} from "../../bindings/OntologySymbolView";
+import {AnnotationValueComponent} from "../annotation/annotation-value";
 
 
 
 @Component({
   selector: 'app-class-detail',
   standalone: true,
-  imports: [CommonModule, ClassExpressionComponent, ObjectPropertyExpressionComponent],
+  imports: [CommonModule, ClassExpressionComponent, ObjectPropertyExpressionComponent, AnnotationValueComponent],
   template: `
     <div class="p-6">
       @if (loading()) {
@@ -31,7 +32,9 @@ import {OntologySymbolView} from "../../bindings/OntologySymbolView";
       } @else {
         <div class="flex items-start justify-between gap-4">
           <div>
-            <h2 class="text-2xl font-semibold text-slate-900">{{ ontologyData().labels.get(this.iri) ?? this.iri }}</h2>
+            <h2 class="text-2xl font-semibold text-slate-900">
+              <app-annotation-value [expression]="this.ontologyData().labels.get(iri) ?? iri" [labelMap]="ontologyData().labels" (onIriClick)="onIriClick.emit($event)"/>
+            </h2>
             @if(iri){            
               <p class="text-sm text-slate-500 mt-1">{{ iri }}</p>
             }
@@ -50,10 +53,17 @@ import {OntologySymbolView} from "../../bindings/OntologySymbolView";
               } @else {
                 @for (anno of this.classDetails()?.annotations!.entries(); track $index) {
                 <div class="px-3 py-2">
-                  <div class="text-sm font-medium text-slate-800">{{ anno[0] }}</div>
+                  <div class="text-sm font-medium text-slate-800">
+                    <app-annotation-value [expression]="this.ontologyData().labels.get(anno[0]) ?? anno[0]" [labelMap]="ontologyData().labels" (onIriClick)="onIriClick.emit($event)"/>
+                  </div>
                   @for(v of anno[1]; track $index) {
                     <div class="px-3 py-2">
-                      <div class="text-xs text-slate-500">{{ renderLiteral(v, ontologyData().labels) }}</div>
+                      <div class="text-xs text-slate-500">
+                        <app-annotation-value
+                          [expression]="v"
+                          [labelMap]="ontologyData().labels"
+                          (onIriClick)="onIriClick.emit($event)" />
+                      </div>
                     </div>
                   }
                 </div>
@@ -141,7 +151,6 @@ export class ClassDetailComponent implements OnChanges{
   protected readonly classDetails = signal<ClassDetailsService | null>(null);
   protected readonly loading = signal(false);
   private currentIri = signal<string | null>(null);
-  private label = (iri: string) => this.ontologyData().labels.get(iri) ?? iri;
 
   constructor() {}
 
@@ -149,7 +158,7 @@ export class ClassDetailComponent implements OnChanges{
     const iri = this.currentIri();
     if (iri !== null) {
       this.loading.set(true);
-      invoke('get_class_details', {iri})
+      invoke('get_class_details', {s:iri})
           .then(result => {
             this.classDetails.set(new ClassDetailsService(result));
             this.loading.set(false);
@@ -170,20 +179,5 @@ export class ClassDetailComponent implements OnChanges{
     }
   }
 
-  protected readonly renderLiteral = renderLiteral;
-
   protected readonly console = console;
-}
-
-function renderLiteral(literal: LiteralView, labelMap: Map<string, string>): string {
-  switch (literal.type) {
-    case 'Simple':
-      return `"${literal.value}"`;
-    case 'Language':
-      return `"${literal.value}"@${literal.language}`;
-    case 'Datatype':
-      return `"${literal.value}"^^${literal.datatype}`;
-    default:
-      return '<unknown literal>';
-  }
 }

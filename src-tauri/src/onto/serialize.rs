@@ -3,7 +3,7 @@ use strix_roost::dependency::base::OntologySymbol;
 use serde::Serialize;
 use ts_rs::TS;
 
-#[derive(Serialize)]
+#[derive(Serialize, Eq, PartialEq, Clone, Hash, Debug)]
 #[derive(TS)]
 #[ts(export)]
 #[serde(tag = "type")]
@@ -81,7 +81,7 @@ pub enum ClassExpressionView {
         data_range: DataRangeView,
     },
 }
-#[derive(Serialize)]
+#[derive(Serialize, Eq, PartialEq, Clone, Hash, Debug)]
 #[derive(TS)]
 #[ts(export)]
 #[serde(tag = "type")]
@@ -94,7 +94,17 @@ pub enum ObjectPropertyExpressionView {
     },
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Eq, PartialEq, Clone, Hash, Debug)]
+#[derive(TS)]
+#[ts(export)]
+#[serde(tag = "type")]
+pub enum DataPropertyView {
+    DataProperty {
+        iri: String,
+    },
+}
+
+#[derive(Serialize, Debug, Eq, PartialEq, Clone, Hash)]
 #[derive(TS)]
 #[ts(export)]
 #[serde(tag = "type")]
@@ -120,7 +130,7 @@ pub struct AnnotationView {
     value: AnnotationValueView,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, Clone, Eq, PartialEq, Hash)]
 #[derive(TS)]
 #[ts(export)]
 #[serde(untagged)]
@@ -261,7 +271,7 @@ impl<'a, T: ForIRI> From<&'a AnnotationValue<T>> for AnnotationValueView {
 }
 
 
-#[derive(Serialize)]
+#[derive(Serialize, Eq, PartialEq, Clone, Hash, Debug)]
 #[derive(TS)]
 #[ts(export)]
 #[serde(tag = "type")]
@@ -287,7 +297,7 @@ impl<T: ForIRI> From<&Individual<T>> for IndividualView {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Hash, Eq, PartialEq, Clone, Debug)]
 #[derive(TS)]
 #[ts(export)]
 #[serde(tag = "symbol_type")]
@@ -296,16 +306,16 @@ pub enum OntologySymbolView {
     Role(ObjectPropertyExpressionView)
 }
 
-impl<T: ForIRI> From<&OntologySymbol<T>> for OntologySymbolView {
+impl<'a, T: ForIRI> From<&OntologySymbol<'a, T>> for OntologySymbolView {
     fn from(symbol: &OntologySymbol<T>) -> Self {
         match symbol {
-            OntologySymbol::CE(c) => OntologySymbolView::CE(ClassExpressionView::from(c)),
-            OntologySymbol::Role(p) => OntologySymbolView::Role(ObjectPropertyExpressionView::from(p))
+            OntologySymbol::CE(c) => OntologySymbolView::CE(ClassExpressionView::from(*c)),
+            OntologySymbol::Role(p) => OntologySymbolView::Role(ObjectPropertyExpressionView::from(*p))
         }
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, Clone, Eq, PartialEq, Hash)]
 #[derive(TS)]
 #[ts(export)]
 #[serde(tag = "type")]
@@ -324,7 +334,7 @@ impl<T: ForIRI> From<&SubObjectPropertyExpression<T>> for SubObjectPropertyExpre
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Eq, PartialEq, Clone, Hash, Debug)]
 #[derive(TS)]
 #[ts(export)]
 #[serde(tag = "type")]

@@ -4,7 +4,7 @@ import {LiteralView} from "../bindings/LiteralView";
 
 export class ClassDetailsService {
     iri: string | null = null;
-    annotations: Map<String, LiteralView[]> = new Map();
+    annotations: Map<string, LiteralView[]> = new Map();
     subclasses: ClassExpressionView[] = [];
     superclasses: ClassExpressionView[] = [];
     equivalentTo: ClassExpressionView[] = [];

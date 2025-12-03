@@ -2,6 +2,9 @@ import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {ClassExpressionView} from '../../bindings/ClassExpressionView';
 import {ObjectPropertyExpressionView} from '../../bindings/ObjectPropertyExpressionView';
+import {AnnotationValueComponent} from "../annotation/annotation-value";
+import {AnnotationView} from "../../bindings/AnnotationView";
+import {AnnotationValueView} from "../../bindings/AnnotationValueView";
 
 @Component({
     selector: 'app-object-property-expression',
@@ -27,18 +30,23 @@ import {ObjectPropertyExpressionView} from '../../bindings/ObjectPropertyExpress
 })
 export class ObjectPropertyExpressionComponent {
     @Input() expression!: ObjectPropertyExpressionView;
-    @Input() labelMap!: Map<String, String>;
+    @Input() labelMap!: Map<String, AnnotationValueView>;
     @Output() onIriClick: EventEmitter<string> = new EventEmitter();
 }
 
 @Component({
     selector: 'app-class-expression',
     standalone: true,
-    imports: [CommonModule, ObjectPropertyExpressionComponent],
+    imports: [CommonModule, ObjectPropertyExpressionComponent, AnnotationValueComponent, AnnotationValueComponent],
     template: `
         @switch (this.expression.type) {
             @case ('Class') {
-                <a href="#" (click)="onIriClick.emit(this.expression.iri)">\`{{ this.labelMap.get(this.expression.iri!) ?? this.expression.iri }}\`</a>
+                <a href="#" (click)="onIriClick.emit(this.expression.iri)">
+                    <app-annotation-value 
+                        [expression]="labelMap.get(this.expression.iri) ?? this.expression.iri"
+                        [labelMap]="labelMap"
+                        (onIriClick)="onIriClick.emit($event)"/>
+                </a>
             }
             @case ('ObjectSomeValuesFrom') {
                 <app-object-property-expression
@@ -122,14 +130,14 @@ export class ObjectPropertyExpressionComponent {
             }
             @default {
                 {{console.log(this.expression)}}
-                <span>Unknown expression type</span>
+                <span>Unknown expression type {{this. expression}}</span>
             }
         }
     `
 })
 export class ClassExpressionComponent {
     @Input() expression!: ClassExpressionView;
-    @Input() labelMap!: Map<String, String>;
+    @Input() labelMap!: Map<String, AnnotationValueView>;
     @Output() onIriClick: EventEmitter<string> = new EventEmitter();
     protected readonly console = console;
 }
