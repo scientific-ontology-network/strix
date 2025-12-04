@@ -1,17 +1,16 @@
 import {Component, computed, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
-import {ClassHierarchyComponent} from '../components/class-hierarchy';
+import {HierarchyTreeComponent} from '../components/hierarchy-tree';
 import {ClassDetailComponent} from '../components/class/class-detail';
 import {OntologyService} from '../services/ontology.service';
 import {StorageService} from '../services/storage.service';
-import {invoke} from "@tauri-apps/api/core";
 
 // @ts-ignore
 @Component({
   selector: 'app-ontology-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, ClassHierarchyComponent, ClassDetailComponent],
+  imports: [CommonModule, FormsModule, HierarchyTreeComponent, ClassDetailComponent],
   template: `
     <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 text-slate-900">
       <!-- Top Bar -->
@@ -37,22 +36,38 @@ import {invoke} from "@tauri-apps/api/core";
         <div class="grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)] gap-6">
           <aside class="rounded-xl border border-slate-200 bg-white/80 backdrop-blur">
             <div class="p-3 border-b border-slate-200">
-              <input type="text" [ngModel]="svc.searchQuery()" (ngModelChange)="svc.searchQuery.set($event)" placeholder="Search classes…"
-                     class="w-full rounded-md border-slate-300 focus:border-primary-500 focus:ring-primary-500 text-sm" />
+              <input type="text" [ngModel]="svc.searchQuery()" (ngModelChange)="svc.searchQuery.set($event)"
+                     placeholder="Search classes…"
+                     class="w-full rounded-md border-slate-300 focus:border-primary-500 focus:ring-primary-500 text-sm"/>
             </div>
-            <app-class-hierarchy
-              [ontologyData]="svc.ontologyData()"
-              [selectedId]="svc.selectedClassId()"
-              [searchQuery]="svc.searchQuery()"
-              (selected)="svc.select($event)"
-            />
+            <div class="p-3 border-b border-slate-200">
+              <app-hierarchy-tree
+                  [hierarchy]="svc.ontologyData().isAssertedSuperclassOf"
+                  [roots]="svc.ontologyData().classRoots"
+                  [labels]="svc.ontologyData().labels"
+                  [selectedId]="svc.selectedClassId()"
+                  [searchQuery]="svc.searchQuery()"
+                  (selected)="svc.selectClass($event)"
+              />
+            </div>
+            <div>
+              <app-hierarchy-tree
+                  [hierarchy]="svc.ontologyData().isAssertedSuperObjectPropertyOf"
+                  [roots]="svc.ontologyData().objectPropertyRoots"
+                  [labels]="svc.ontologyData().labels"
+                  [selectedId]="svc.selectedObjectPropertyId()"
+                  [searchQuery]="svc.searchQuery()"
+                  (selected)="svc.selectClass($event)"
+              />
+            </div>
           </aside>
           <section class="rounded-xl border border-slate-200 bg-white/80 backdrop-blur min-h-[420px]">
             @if (selected()) {
-              <app-class-detail 
+              <app-class-detail
                   [iri]="selected()!"
                   [ontologyData]="svc.ontologyData"
-                  (onIriClick)="svc.select($event)"
+                  (onClassClick)="svc.selectClass($event)"
+                  (onObjectPropertyClick)="svc.selectObjectProperty($event)"
               />
             }
           </section>

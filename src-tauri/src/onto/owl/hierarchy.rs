@@ -1,20 +1,26 @@
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 use std::sync::Arc;
-use horned_owl::model::{Annotation, AnnotationSubject, Class, ClassExpression, ForIRI, SubClassOf};
+use horned_owl::model::{Annotation, AnnotationSubject, Class, ClassExpression, ForIRI, ObjectPropertyExpression, SubClassOf, SubObjectPropertyExpression};
 use horned_owl::ontology::set::SetOntology;
 use petgraph::graph::DiGraph;
 use serde::Serialize;
 use crate::onto::owl::class::ClassDetails;
 use crate::onto::owl::visitor::AxiomVisitor;
-use crate::onto::serialize::{AnnotationValueView, ClassExpressionView};
+use crate::onto::serialize::{AnnotationValueView, ClassExpressionView, ObjectPropertyExpressionView, SubObjectPropertyExpressionView};
 
 #[derive(Default, Serialize)]
 pub struct ClassHierarchy {
     is_asserted_subclass_expression_of: HashSet<(ClassExpressionView, ClassExpressionView)>,
     is_asserted_superclass_of: HashMap<String, HashSet<String>>,
     equivalent_classes: Vec<Vec<ClassExpressionView>>,
-    roots: HashSet<String>,
+    class_roots: HashSet<String>,
+
+    is_asserted_sub_object_property_expression_of: HashSet<(SubObjectPropertyExpressionView, ObjectPropertyExpressionView)>,
+    is_asserted_super_object_property_of: HashMap<String, HashSet<String>>,
+    equivalent_object_properties: Vec<Vec<ObjectPropertyExpressionView>>,
+    object_property_roots: HashSet<String>,
+
     labels: HashMap<String, AnnotationValueView>
 }
 
@@ -23,16 +29,17 @@ fn add_to_map<T: Hash + PartialEq + Eq, S: Eq + Hash>(map: &mut HashMap<T, HashS
 }
 
 impl ClassHierarchy {
-    fn find_roots(&mut self) {
-        let sups = self.is_asserted_superclass_of.iter().map(|(a,b)| a).collect::<HashSet<_>>();
-        let subs = self.is_asserted_superclass_of.iter().flat_map(|(a,b)| b).collect::<HashSet<_>>();
-        self.roots = sups.difference(&subs).map(|c| (*c).clone()).collect()
+    fn find_roots<T: Hash + Eq + PartialEq + Clone>(supers: &HashMap<T, HashSet<T>>) -> HashSet<T> {
+        let sups = supers.iter().map(|(a,_b)| a).collect::<HashSet<_>>();
+        let subs = supers.iter().flat_map(|(_a,b)| b).collect::<HashSet<_>>();
+        sups.difference(&subs).map(|c| (**c).clone()).collect()
     }
 
     pub(crate) fn new<T: ForIRI>(so: &SetOntology<T>) -> Self {
         let mut hier = ClassHierarchy::default();
         hier.visit_components(so.i().iter(), &T::from("".to_string()));
-        hier.find_roots();
+        hier.class_roots = Self::find_roots(&hier.is_asserted_superclass_of);
+        hier.object_property_roots = Self::find_roots(&hier.is_asserted_super_object_property_of);
         hier
     }
 
@@ -53,6 +60,26 @@ impl ClassHierarchy {
             ClassExpression::ObjectUnionOf(cs) => cs.iter().flat_map(|c| Self::derive_subclasses_of_class_expression(c)).collect(),
             _ => Vec::new()
         }
+    }
+
+    fn derive_subroles_of_object_property_expression<T: ForIRI>(sope: &SubObjectPropertyExpression<T>) -> Vec<String> {
+        match sope {
+            SubObjectPropertyExpression::ObjectPropertyExpression(ope) =>
+                match ope {
+                    ObjectPropertyExpression::ObjectProperty(op) => { vec![op.0.to_string()] }
+                    ObjectPropertyExpression::InverseObjectProperty(op) => { Vec::new() }
+                }
+            SubObjectPropertyExpression::ObjectPropertyChain(cs) => { Vec::new() },
+            _ => Vec::new()
+        }
+    }
+
+    fn derive_superroles_of_object_property_expression<T: ForIRI>(ope: &ObjectPropertyExpression<T>) -> Vec<String> {
+        match ope {
+            ObjectPropertyExpression::ObjectProperty(op) => { vec![op.0.to_string()] }
+            ObjectPropertyExpression::InverseObjectProperty(op) => { Vec::new() }
+        }
+
     }
 }
 
@@ -82,6 +109,18 @@ impl<T: ForIRI>  AxiomVisitor<T> for ClassHierarchy {
         }
     }
 
+    fn visit_sub_object_property_of(&mut self, sub: &SubObjectPropertyExpression<T>, sup: &ObjectPropertyExpression<T>, target: &T) {
+        self.is_asserted_sub_object_property_expression_of.insert((sub.into(), sup.into()));
+        for sub in Self::derive_subroles_of_object_property_expression(sub) {
+            for sup in Self::derive_superroles_of_object_property_expression(sup){
+                add_to_map(&mut self.is_asserted_super_object_property_of, sup, sub.clone());
+            }
+        }
+    }
+
+    fn visit_equivalent_object_properties(&mut self, es: &Vec<ObjectPropertyExpression<T>>, target: &T) {
+        self.equivalent_object_properties.push(es.iter().map(|c| c.into()).collect())
+    }
 }
 
 fn _derive_classes_from_class_expression<T: ForIRI>(ce: &ClassExpression<T>) -> HashSet<T> {
@@ -115,4 +154,13 @@ fn _derive_classes_from_class_expression<T: ForIRI>(ce: &ClassExpression<T>) -> 
         }
         _ => HashSet::new(),
     }
+}
+
+#[derive(Default, Serialize)]
+pub struct RoleHierarchy {
+    is_asserted_subrole_expression_of: HashSet<(ClassExpressionView, ClassExpressionView)>,
+    is_asserted_superrole_of: HashMap<String, HashSet<String>>,
+    equivalent_roles: Vec<Vec<ClassExpressionView>>,
+    roots: HashSet<String>,
+    labels: HashMap<String, AnnotationValueView>
 }

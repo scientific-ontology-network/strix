@@ -13,18 +13,19 @@ import { CommonModule } from '@angular/common';
 import {invoke} from "@tauri-apps/api/core";
 import {OntologyData} from "../../services/ontology.service";
 import {ClassDetailsService} from "../../services/class.service";
-import {ClassExpressionComponent, ObjectPropertyExpressionComponent} from "./class-expression";
+import {ClassExpressionComponent} from "./class-expression";
 import {LiteralView} from "../../bindings/LiteralView";
 import {v4 as uuidv4} from 'uuid';
 import {OntologySymbolView} from "../../bindings/OntologySymbolView";
 import {AnnotationValueComponent} from "../annotation/annotation-value";
+import {ObjectPropertyExpressionComponent} from "../property/object_property";
 
 
 
 @Component({
   selector: 'app-class-detail',
   standalone: true,
-  imports: [CommonModule, ClassExpressionComponent, ObjectPropertyExpressionComponent, AnnotationValueComponent],
+  imports: [CommonModule, ClassExpressionComponent, ObjectPropertyExpressionComponent, AnnotationValueComponent, ObjectPropertyExpressionComponent],
   template: `
     <div class="p-6">
       @if (loading()) {
@@ -33,7 +34,7 @@ import {AnnotationValueComponent} from "../annotation/annotation-value";
         <div class="flex items-start justify-between gap-4">
           <div>
             <h2 class="text-2xl font-semibold text-slate-900">
-              <app-annotation-value [expression]="this.ontologyData().labels.get(iri) ?? iri" [labelMap]="ontologyData().labels" (onIriClick)="onIriClick.emit($event)"/>
+              <app-annotation-value [expression]="this.ontologyData().labels.get(iri) ?? iri" [labelMap]="ontologyData().labels" />
             </h2>
             @if(iri){            
               <p class="text-sm text-slate-500 mt-1">{{ iri }}</p>
@@ -54,15 +55,16 @@ import {AnnotationValueComponent} from "../annotation/annotation-value";
                 @for (anno of this.classDetails()?.annotations!.entries(); track $index) {
                 <div class="px-3 py-2">
                   <div class="text-sm font-medium text-slate-800">
-                    <app-annotation-value [expression]="this.ontologyData().labels.get(anno[0]) ?? anno[0]" [labelMap]="ontologyData().labels" (onIriClick)="onIriClick.emit($event)"/>
+                    <app-annotation-value 
+                        [expression]="this.ontologyData().labels.get(anno[0]) ?? anno[0]" 
+                        [labelMap]="ontologyData().labels"/>
                   </div>
                   @for(v of anno[1]; track $index) {
                     <div class="px-3 py-2">
                       <div class="text-xs text-slate-500">
                         <app-annotation-value
                           [expression]="v"
-                          [labelMap]="ontologyData().labels"
-                          (onIriClick)="onIriClick.emit($event)" />
+                          [labelMap]="ontologyData().labels" />
                       </div>
                     </div>
                   }
@@ -81,7 +83,8 @@ import {AnnotationValueComponent} from "../annotation/annotation-value";
                     <ul>
                     @for (p of this.classDetails()?.subclasses; track $index) {
                       <li><app-class-expression [expression]="p" [labelMap]="ontologyData().labels"
-                                                (onIriClick)="onIriClick.emit($event)"/></li>
+                                                (onClassClick)="onClassClick.emit($event)"
+                                                (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/></li>
                     }
                     </ul>
                   </span>
@@ -94,7 +97,8 @@ import {AnnotationValueComponent} from "../annotation/annotation-value";
                     <ul>
                     @for (p of this.classDetails()?.superclasses; track $index) {
                       <li><app-class-expression [expression]="p" [labelMap]="ontologyData().labels"
-                                                (onIriClick)="onIriClick.emit($event)"/></li>
+                                                (onClassClick)="onClassClick.emit($event)"
+                                                (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/></li>
                     }
                     </ul>
                   </span>
@@ -111,14 +115,17 @@ import {AnnotationValueComponent} from "../annotation/annotation-value";
                         @case('CE') {
                           @if (dependency.type == "Class") {
                             <app-class-expression class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm"
-                                                   [expression]="dependency" [labelMap]="ontologyData().labels"
-                                                      (onIriClick)="onIriClick.emit($event)"/>
+                                                   [expression]="dependency" 
+                                                   [labelMap]="ontologyData().labels"
+                                                   (onClassClick)="onClassClick.emit($event)"
+                                                   (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/>
                           }
                         } @case('Role') {
                           @if (dependency.type == "ObjectProperty") {
                             <app-object-property-expression class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm"
-                                                            [expression]="dependency" [labelMap]="ontologyData().labels"
-                                                                (onIriClick)="onIriClick.emit($event)"/>
+                                                            [expression]="dependency" 
+                                                            [labelMap]="ontologyData().labels"
+                                                            (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/>
                           }
                         }
                       }
@@ -146,7 +153,8 @@ import {AnnotationValueComponent} from "../annotation/annotation-value";
 export class ClassDetailComponent implements OnChanges{
   @Input() iri!: string;
   @Input() ontologyData!: Signal<OntologyData>;
-  @Output() onIriClick: EventEmitter<string> = new EventEmitter();
+  @Output() onClassClick: EventEmitter<string> = new EventEmitter();
+  @Output() onObjectPropertyClick: EventEmitter<string> = new EventEmitter();
 
   protected readonly classDetails = signal<ClassDetailsService | null>(null);
   protected readonly loading = signal(false);

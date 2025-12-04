@@ -1,22 +1,20 @@
 import { Component, EventEmitter, Input, Output, Signal, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {OntologyData} from '../services/ontology.service';
-import {ClassExpressionComponent} from "./class/class-expression";
 import {AnnotationValueComponent, getUntaggedStringFromAnnotationValue} from "./annotation/annotation-value";
+import {AnnotationValueView} from "../bindings/AnnotationValueView";
 
-interface NodeVM { id: string; label: string; }
 
 @Component({
-  selector: 'app-class-hierarchy',
+  selector: 'app-hierarchy-tree',
   standalone: true,
   imports: [CommonModule, AnnotationValueComponent],
   template: `
     <div class="p-3 flex flex-col h-full">
-      @if(!this.ontologyData.roots.length){
-        <div class="text-xs text-slate-500 mb-2">No classes loaded.</div>
+      @if(!this.roots.length){
+        <div class="text-xs text-slate-500 mb-2">No data loaded.</div>
       } @else {
         <ul class="space-y-1 flex-1 overflow-y-auto">
-          @for(id of this.ontologyData.roots; track $index){
+          @for(id of this.roots; track $index){
             <ng-template [ngTemplateOutlet]="nodeTpl" [ngTemplateOutletContext]="{ id: id, depth: 0 }" />
           }
         </ul>
@@ -37,7 +35,7 @@ interface NodeVM { id: string; label: string; }
             </button>
           }
           <span class="text-sm text-slate-800 truncate" [class.font-semibold]="selectedId===id">
-            <app-annotation-value [expression]="label(id)" [labelMap]="ontologyData.labels" (onIriClick)="selected.emit($event)"/>
+            <app-annotation-value [expression]="label(id)" [labelMap]="labels"/>
           </span>
         </div>
         @if(expanded.has(id)) {
@@ -51,8 +49,10 @@ interface NodeVM { id: string; label: string; }
     </ng-template>
   `,
 })
-export class ClassHierarchyComponent {
-  @Input() ontologyData!: OntologyData;
+export class HierarchyTreeComponent {
+  @Input() hierarchy!: Map<string,string[]>;
+  @Input() roots!: string[];
+  @Input() labels!: Map<string, AnnotationValueView>;
   @Input() selectedId: string | null = null;
   @Input() searchQuery = '';
   @Output() selected = new EventEmitter<string>();
@@ -62,7 +62,7 @@ export class ClassHierarchyComponent {
     const q = (this.searchQuery || '').trim().toLowerCase();
     if (!q) return new Set<string>();
     const set = new Set<string>();
-    for (const c of this.ontologyData.roots) if (getUntaggedStringFromAnnotationValue(this.label(c)).toLowerCase().includes(q) || (c ?? '').toLowerCase().includes(q)) set.add(c);
+    for (const c of this.roots) if (getUntaggedStringFromAnnotationValue(this.label(c)).toLowerCase().includes(q) || (c ?? '').toLowerCase().includes(q)) set.add(c);
     return set;
   });
 
@@ -76,13 +76,11 @@ export class ClassHierarchyComponent {
 
   track = (_: number, id: string) => id;
   protected label(id: string){
-    let label = this.ontologyData.labels.get(id)?? id;
-    //console.log(id, label);
-    return label;
+    return this.labels.get(id) ?? id;
   }
 
   children(id: string): string[] {
-    const out = this.ontologyData.isAssertedSuperclassOf.get(id) ?? [];
+    const out = this.hierarchy.get(id) ?? [];
     const q = (this.searchQuery || '').trim().toLowerCase();
     if (!q) return out;
 
@@ -94,7 +92,7 @@ export class ClassHierarchyComponent {
     if (!c) return false;
     const here = getUntaggedStringFromAnnotationValue(this.label(c))?.toLowerCase().includes(q) || (c ?? '').toLowerCase().includes(q);
     if (here) return true;
-    const kids = this.ontologyData.isAssertedSuperclassOf.get(c) ?? [];
+    const kids = this.hierarchy.get(c) ?? [];
     return kids.some(k => this.isVisible(k, q));
   }
 
@@ -110,7 +108,7 @@ export class ClassHierarchyComponent {
     // naive ancestor expansion by reverse scanning parents from id
     // Build reverse map on-the-fly
     const parentMap = new Map<string, string[]>();
-    for (const p of this.ontologyData.roots) for (const c of this.ontologyData.isAssertedSuperclassOf.get(p) ?? []) {
+    for (const p of this.roots) for (const c of this.hierarchy.get(p) ?? []) {
       if (!parentMap.has(c)) parentMap.set(c, []);
       parentMap.get(c)!.push(p);
     }

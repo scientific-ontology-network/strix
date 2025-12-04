@@ -25,13 +25,11 @@ export function getUntaggedStringFromAnnotationValue(value: AnnotationValueView)
                 <app-literal
                     [expression]="this.expression!"
                     [labelMap]="labelMap"
-                    (onIriClick)="onIriClick.emit($event)"
                 />
         }`
 })
 export class AnnotationValueComponent {
     @Input() expression!: AnnotationValueView;
     @Input() labelMap!: Map<String, AnnotationValueView>;
-    @Output() onIriClick: EventEmitter<string> = new EventEmitter();
     protected readonly console = console;
 }

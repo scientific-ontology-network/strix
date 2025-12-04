@@ -19,7 +19,6 @@ import {AnnotationValueView} from "../bindings/AnnotationValueView";
                 {{this.expression.value}}^^{{this.expression.datatype}}
             }
             @default {
-                {{console.log(this.expression)}}
                 <span>Unknown literal type {{this. expression}}</span>
             }
         }
@@ -28,6 +27,5 @@ import {AnnotationValueView} from "../bindings/AnnotationValueView";
 export class LiteralComponent {
     @Input() expression!: LiteralView;
     @Input() labelMap!: Map<String, AnnotationValueView>;
-    @Output() onIriClick: EventEmitter<string> = new EventEmitter();
     protected readonly console = console;
 }

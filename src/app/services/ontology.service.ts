@@ -5,25 +5,25 @@ import {AnnotationValueView} from "../bindings/AnnotationValueView";
 
 export interface OntologyData {
   labels: Map<string, AnnotationValueView>;
-  roots: string[];
+  classRoots: string[];
   isAssertedSuperclassOf: Map<string, string[]>;
+
+  objectPropertyRoots: string[];
+  isAssertedSuperObjectPropertyOf: Map<string, string[]>;
 }
 
 @Injectable({ providedIn: 'root' })
 export class OntologyService {
   readonly ontologyData = signal<OntologyData>({
     labels: new Map(),
-    roots: [],
+    classRoots: [],
     isAssertedSuperclassOf: new Map(),
+    objectPropertyRoots: [],
+    isAssertedSuperObjectPropertyOf: new Map(),
   });
   readonly selectedClassId = signal<string | null>(null);
+  readonly selectedObjectPropertyId = signal<string | null>(null);
   readonly searchQuery = signal('');
-
-  readonly roots = computed(() => {
-    const d = this.ontologyData();
-    if (!d) return [] as string[];
-    return d.roots;
-  });
 
   load(path: string) {
       invoke('load_ontology', {path: path}).then(
@@ -33,38 +33,39 @@ export class OntologyService {
           let labelMap = new Map(Object.entries(classHierarchy.labels));
           // @ts-ignore
           let directSubclasses =  new Map(Object.entries(classHierarchy.is_asserted_superclass_of));
+          // @ts-ignore
+          let directSubproperties =  new Map(Object.entries(classHierarchy.is_asserted_super_object_property_of));
 
           // @ts-ignore
           this.ontologyData.set({
             // @ts-ignore
             labels: labelMap,
             // @ts-ignore
-            roots: classHierarchy.roots,
+            classRoots: classHierarchy.class_roots,
             // @ts-ignore
             isAssertedSuperclassOf: directSubclasses,
+            // @ts-ignore
+            objectPropertyRoots: classHierarchy.object_property_roots,
+            // @ts-ignore
+            isAssertedSuperObjectPropertyOf: directSubproperties,
           });
           // reset selection
           // @ts-ignore
-          const first = classHierarchy.roots[0] ?? null;
+          const first = classHierarchy.class_roots[0] ?? null;
           this.selectedClassId.set(first);
 
         })
     )
   }
 
-
-  clear() {
-    this.ontologyData.set({
-      isAssertedSuperclassOf: new Map(),
-      labels: new Map(),
-      roots: [],
-    });
-    // Todo: Clear ontology in backend
-    this.selectedClassId.set(null);
+  selectClass(id: string) {
+    this.selectedClassId.set(id);
+    this.selectedObjectPropertyId.set(null);
   }
 
-  select(id: string) {
-    this.selectedClassId.set(id);
+  selectObjectProperty(id: string) {
+    this.selectedClassId.set(null);
+    this.selectedObjectPropertyId.set(id);
   }
 
 
