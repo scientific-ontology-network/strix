@@ -21,11 +21,11 @@ import {AnnotationValueComponent} from "../annotation/annotation-value";
 import {ObjectPropertyExpressionComponent} from "../property/object_property";
 
 
-
 @Component({
   selector: 'app-class-detail',
   standalone: true,
   imports: [CommonModule, ClassExpressionComponent, ObjectPropertyExpressionComponent, AnnotationValueComponent, ObjectPropertyExpressionComponent],
+  preserveWhitespaces: true,
   template: `
     <div class="p-6">
       @if (loading()) {
@@ -54,20 +54,24 @@ import {ObjectPropertyExpressionComponent} from "../property/object_property";
               } @else {
                 @for (anno of this.classDetails()?.annotations!.entries(); track $index) {
                 <div class="px-3 py-2">
-                  <div class="text-sm font-medium text-slate-800">
+                  <b>
                     <app-annotation-value 
                         [expression]="this.ontologyData().labels.get(anno[0]) ?? anno[0]" 
                         [labelMap]="ontologyData().labels"/>
-                  </div>
-                  @for(v of anno[1]; track $index) {
+                  </b>
+                  
+                    @for(v of anno[1]; track v) {
                     <div class="px-3 py-2">
-                      <div class="text-xs text-slate-500">
+                        <div class="text-xs text-slate-500" ngPreserveWhitespaces style="white-space: pre">
                         <app-annotation-value
                           [expression]="v"
                           [labelMap]="ontologyData().labels" />
-                      </div>
+                        </div>
+                      
                     </div>
-                  }
+                    }
+                  
+                  
                 </div>
                 }
               }
@@ -186,4 +190,7 @@ export class ClassDetailComponent implements OnChanges{
   }
 
   protected readonly console = console;
+
 }
+
+
