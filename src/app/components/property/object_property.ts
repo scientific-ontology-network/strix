@@ -2,15 +2,19 @@ import {Component, EventEmitter, Input, Output} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {ObjectPropertyExpressionView} from "../../bindings/ObjectPropertyExpressionView";
 import {AnnotationValueView} from "../../bindings/AnnotationValueView";
+import {AnnotationValueComponent} from "../annotation/annotation-value";
 
 @Component({
     selector: 'app-object-property-expression',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, AnnotationValueComponent],
     template: `
         @switch (this.expression.type) {
             @case ('ObjectProperty') {
-                <a href="#" (click)="onObjectPropertyClick.emit(this.expression.iri)">\`{{ labelMap.get(this.expression.iri!) ?? this.expression.iri }}\`</a>
+                <a href="#" (click)="onObjectPropertyClick.emit(this.expression.iri)">
+                    <app-annotation-value
+                            [expression]="labelMap.get(this.expression.iri) ?? this.expression.iri"
+                            [labelMap]="labelMap"/></a>
             }
             @case ('InverseObjectProperty') {
                 inverse

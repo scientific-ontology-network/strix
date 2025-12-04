@@ -10,13 +10,13 @@ import {AnnotationValueView} from "../bindings/AnnotationValueView";
     template: `
         @switch (this.expression.type) {
             @case ('Simple') {
-                {{this.expression.value}}
+                \`{{this.expression.value}}\`
             }
             @case ('Language') {
-                {{this.expression.value}}&#64;{{this.expression.language}}
+                \`{{this.expression.value}}\`&#64;{{this.expression.language}}
             }
             @case ('Datatype') {
-                {{this.expression.value}}^^{{this.expression.datatype}}
+                \`{{this.expression.value}}\`^^{{this.expression.datatype}}
             }
             @default {
                 <span>Unknown literal type {{this. expression}}</span>

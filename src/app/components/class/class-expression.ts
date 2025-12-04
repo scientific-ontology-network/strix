@@ -22,7 +22,7 @@ import {ObjectPropertyExpressionComponent} from "../property/object_property";
                 </a>
             }
             @case ('ObjectSomeValuesFrom') {
-                <app-object-property-expression
+                (<app-object-property-expression
                     [expression]="this.expression.property!"
                     [labelMap]="labelMap"
                     (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"
@@ -31,10 +31,10 @@ import {ObjectPropertyExpressionComponent} from "../property/object_property";
                 <app-class-expression [expression]="this.expression.class_expression"
                                       [labelMap]="this.labelMap"
                                       (onClassClick)="onClassClick.emit($event)"
-                                      (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"></app-class-expression>
+                                      (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"></app-class-expression>)
             }
             @case ('ObjectAllValuesFrom') {
-                <app-object-property-expression
+                (<app-object-property-expression
                         [expression]="this.expression.property!"
                         [labelMap]="this.labelMap"
                         (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"
@@ -43,7 +43,7 @@ import {ObjectPropertyExpressionComponent} from "../property/object_property";
                 <app-class-expression [expression]="this.expression.class_expression"
                                       [labelMap]="this.labelMap"
                                       (onClassClick)="onClassClick.emit($event)"
-                                      (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"></app-class-expression>
+                                      (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"></app-class-expression>)
             }
             @case ('ObjectIntersectionOf') {
                 <span *ngFor="let op of this.expression.operands; let last = last">

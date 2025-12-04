@@ -19,7 +19,7 @@ export function getUntaggedStringFromAnnotationValue(value: AnnotationValueView)
     imports: [CommonModule, LiteralComponent],
     template: `
         @if (typeof this.expression === "string") {
-               <div>{{this.expression}}</div>
+               <div>\`{{this.expression}}\`</div>
         } @else
         {
                 <app-literal

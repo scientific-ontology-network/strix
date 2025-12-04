@@ -76,12 +76,12 @@ import {ObjectPropertyExpressionComponent} from "../property/object_property";
           <div>
             <h3 class="text-sm font-medium text-slate-600 uppercase tracking-wider">Metadata</h3>
             <div class="mt-2 rounded-md border border-slate-200">
-              @if(this.classDetails()?.subclasses?.length){
+              @if(this.classDetails()?.equivalentTo?.length){
                 <div class="border-t px-3 py-2 text-sm"><span
-                    class="text-slate-500">Subclasses:</span>
+                    class="text-slate-500">Equivalent To:</span>
                   <span class="ml-2 inline-flex gap-1 flex-wrap">
                     <ul>
-                    @for (p of this.classDetails()?.subclasses; track $index) {
+                    @for (p of this.classDetails()?.equivalentTo; track $index) {
                       <li><app-class-expression [expression]="p" [labelMap]="ontologyData().labels"
                                                 (onClassClick)="onClassClick.emit($event)"
                                                 (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/></li>
@@ -92,7 +92,7 @@ import {ObjectPropertyExpressionComponent} from "../property/object_property";
               }
               @if(this.classDetails()?.superclasses?.length){
                 <div class="border-t px-3 py-2 text-sm"><span
-                    class="text-slate-500">Superclasses:</span>
+                    class="text-slate-500">SubClass Of:</span>
                   <span class="ml-2 inline-flex gap-1 flex-wrap">
                     <ul>
                     @for (p of this.classDetails()?.superclasses; track $index) {
@@ -113,13 +113,11 @@ import {ObjectPropertyExpressionComponent} from "../property/object_property";
                     <li>
                       @switch (dependency.symbol_type) {
                         @case('CE') {
-                          @if (dependency.type == "Class") {
                             <app-class-expression class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm"
                                                    [expression]="dependency" 
                                                    [labelMap]="ontologyData().labels"
                                                    (onClassClick)="onClassClick.emit($event)"
                                                    (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/>
-                          }
                         } @case('Role') {
                           @if (dependency.type == "ObjectProperty") {
                             <app-object-property-expression class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm"
