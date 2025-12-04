@@ -3,7 +3,7 @@ import {CommonModule} from '@angular/common';
 import {ClassExpressionView} from '../../bindings/ClassExpressionView';
 import {ObjectPropertyExpressionView} from '../../bindings/ObjectPropertyExpressionView';
 import {AnnotationValueView} from "../../bindings/AnnotationValueView";
-import {LiteralComponent} from "../literal";
+import {addLineBreaks, LiteralComponent} from "../literal";
 
 export function getUntaggedStringFromAnnotationValue(value: AnnotationValueView): string {
     if (typeof value === "string") {
@@ -19,7 +19,7 @@ export function getUntaggedStringFromAnnotationValue(value: AnnotationValueView)
     imports: [CommonModule, LiteralComponent],
     template: `
         @if (typeof this.expression === "string") {
-               <div>\`{{this.expression}}\`</div>
+               <div>\`{{addLineBreaks(this.expression)}}\`</div>
         } @else
         {
                 <app-literal
@@ -31,5 +31,5 @@ export function getUntaggedStringFromAnnotationValue(value: AnnotationValueView)
 export class AnnotationValueComponent {
     @Input() expression!: AnnotationValueView;
     @Input() labelMap!: Map<String, AnnotationValueView>;
-    protected readonly console = console;
+    protected readonly addLineBreaks = addLineBreaks;
 }

@@ -54,16 +54,14 @@ import {ObjectPropertyExpressionComponent} from "../property/object_property";
               } @else {
                 @for (anno of this.classDetails()?.annotations!.entries(); track $index) {
                 <div class="px-3 py-2">
-                  <b>
-                    <app-annotation-value 
+                  <b><app-annotation-value 
                         [expression]="this.ontologyData().labels.get(anno[0]) ?? anno[0]" 
                         [labelMap]="ontologyData().labels"/>
                   </b>
                   
                     @for(v of anno[1]; track v) {
                     <div class="px-3 py-2">
-                        <div class="text-xs text-slate-500" ngPreserveWhitespaces style="white-space: pre">
-                        <app-annotation-value
+                        <div class="text-xs text-slate-500" ngPreserveWhitespaces style="white-space: pre"><app-annotation-value
                           [expression]="v"
                           [labelMap]="ontologyData().labels" />
                         </div>

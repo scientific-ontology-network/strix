@@ -10,7 +10,7 @@ import {AnnotationValueView} from "../bindings/AnnotationValueView";
     template: `
         @switch (this.expression.type) {
             @case ('Simple') {
-                \`{{this.expression.value}}\`
+                \`{{ addLineBreaks(this.expression.value) }}\`
             }
             @case ('Language') {
                 \`{{this.expression.value}}\`&#64;{{this.expression.language}}
@@ -27,5 +27,29 @@ import {AnnotationValueView} from "../bindings/AnnotationValueView";
 export class LiteralComponent {
     @Input() expression!: LiteralView;
     @Input() labelMap!: Map<String, AnnotationValueView>;
-    protected readonly console = console;
+    protected readonly addLineBreaks = addLineBreaks;
+}
+
+export function addLineBreaks(text: string){
+
+    if(text.includes("\n")){
+        return text;
+    }
+
+    var result = "";
+
+    while(text != "") {
+
+        var i = 80;
+        while(text.charAt(i) != ' ' && text.length > i && i > 0){
+            i--;
+        }
+
+
+        result += text.slice(0,i);
+        result += "\n";
+        text = text.substring(i);
+    }
+
+    return result;
 }
