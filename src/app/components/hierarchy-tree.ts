@@ -14,7 +14,7 @@ import {AnnotationValueView} from "../bindings/AnnotationValueView";
         <div class="text-xs text-slate-500 mb-2">No data loaded.</div>
       } @else {
         <ul class="space-y-1 flex-1 overflow-y-auto">
-          @for(id of this.roots; track $index){
+          @for(id of this.roots.sort(this.sorter(this.labels)); track $index){
             <ng-template [ngTemplateOutlet]="nodeTpl" [ngTemplateOutletContext]="{ id: id, depth: 0 }" />
           }
         </ul>
@@ -40,7 +40,7 @@ import {AnnotationValueView} from "../bindings/AnnotationValueView";
         </div>
         @if(expanded.has(id)) {
           <ul class="ml-2 pl-3 border-l border-slate-300 space-y-0.5">
-            @for(cid of children(id); track $index) {
+            @for(cid of children(id).sort(this.sorter(this.labels)); track $index) {
               <ng-template [ngTemplateOutlet]="nodeTpl" [ngTemplateOutletContext]="{ id: cid, depth: depth+1 }" />
             }
           </ul>
@@ -74,9 +74,16 @@ export class HierarchyTreeComponent {
     }
   }
 
-  track = (_: number, id: string) => id;
   protected label(id: string){
     return this.labels.get(id) ?? id;
+  }
+
+  protected sorter(labels: Map<string, AnnotationValueView>): (a:string,b:string) => number {
+    return (a:string,b:string) => {
+      let la = getUntaggedStringFromAnnotationValue(labels.get(a) ?? a)
+      let lb = getUntaggedStringFromAnnotationValue(labels.get(b) ?? b)
+      return (la < lb) ? -1 : (la > lb) ? 1 : 0;
+    }
   }
 
   children(id: string): string[] {
@@ -108,9 +115,11 @@ export class HierarchyTreeComponent {
     // naive ancestor expansion by reverse scanning parents from id
     // Build reverse map on-the-fly
     const parentMap = new Map<string, string[]>();
-    for (const p of this.roots) for (const c of this.hierarchy.get(p) ?? []) {
-      if (!parentMap.has(c)) parentMap.set(c, []);
-      parentMap.get(c)!.push(p);
+    for (const p of this.roots) {
+      for (const c of (this.hierarchy.get(p) ?? [])) {
+        if (!parentMap.has(c)) parentMap.set(c, []);
+        parentMap.get(c)!.push(p);
+      }
     }
     const visit = (n: string) => {
       const parents = parentMap.get(n) ?? [];
