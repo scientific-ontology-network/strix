@@ -1,4 +1,4 @@
 mod rdf;
-mod serialize;
+pub(crate) mod serialize;
 pub mod owl;
 pub(crate) mod state;

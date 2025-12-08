@@ -60,6 +60,16 @@ import {StorageService} from '../services/storage.service';
                   (selected)="svc.selectClass($event)"
               />
             </div>
+            <div>
+              <app-hierarchy-tree
+                  [hierarchy]="svc.ontologyData().dependencies"
+                  [roots]="svc.ontologyData().dependencyRoots"
+                  [labels]="svc.ontologyData().labels"
+                  [selectedId]="svc.selectedObjectPropertyId()"
+                  [searchQuery]="svc.searchQuery()"
+                  (selected)="svc.selectClass($event)"
+              />
+            </div>
           </aside>
           <section class="rounded-xl border border-slate-200 bg-white/80 backdrop-blur min-h-[420px]">
             @if (selected()) {

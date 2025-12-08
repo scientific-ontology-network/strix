@@ -318,7 +318,7 @@ impl<'a, T: ForIRI> From<&OntologySymbol<'a, T>> for OntologySymbolView {
 #[derive(Serialize, Debug, Clone, Eq, PartialEq, Hash)]
 #[derive(TS)]
 #[ts(export)]
-#[serde(tag = "type")]
+#[serde(tag = "sop_type", content = "content")]
 pub enum SubObjectPropertyExpressionView {
     ObjectPropertyExpression(ObjectPropertyExpressionView),
     ObjectPropertyChain (Vec<ObjectPropertyExpressionView>),

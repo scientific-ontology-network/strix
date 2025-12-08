@@ -10,7 +10,7 @@ use crate::onto::owl::visitor::AxiomVisitor;
 use crate::onto::serialize::{AnnotationValueView, ClassExpressionView, ObjectPropertyExpressionView, SubObjectPropertyExpressionView};
 
 #[derive(Default, Serialize)]
-pub struct ClassHierarchy {
+pub struct OntologyView {
     is_asserted_subclass_expression_of: HashSet<(ClassExpressionView, ClassExpressionView)>,
     is_asserted_superclass_of: HashMap<String, HashSet<String>>,
     equivalent_classes: Vec<Vec<ClassExpressionView>>,
@@ -28,7 +28,7 @@ fn add_to_map<T: Hash + PartialEq + Eq, S: Eq + Hash>(map: &mut HashMap<T, HashS
     map.entry(key).or_insert_with(HashSet::new).insert(value);
 }
 
-impl ClassHierarchy {
+impl OntologyView {
     fn find_roots<T: Hash + Eq + PartialEq + Clone>(supers: &HashMap<T, HashSet<T>>) -> HashSet<T> {
         let sups = supers.iter().map(|(a,_b)| a).collect::<HashSet<_>>();
         let subs = supers.iter().flat_map(|(_a,b)| b).collect::<HashSet<_>>();
@@ -36,7 +36,7 @@ impl ClassHierarchy {
     }
 
     pub(crate) fn new<T: ForIRI>(so: &SetOntology<T>) -> Self {
-        let mut hier = ClassHierarchy::default();
+        let mut hier = OntologyView::default();
         hier.visit_components(so.i().iter(), &T::from("".to_string()));
         hier.class_roots = Self::find_roots(&hier.is_asserted_superclass_of);
         hier.object_property_roots = Self::find_roots(&hier.is_asserted_super_object_property_of);
@@ -83,7 +83,7 @@ impl ClassHierarchy {
     }
 }
 
-impl<T: ForIRI>  AxiomVisitor<T> for ClassHierarchy {
+impl<T: ForIRI>  AxiomVisitor<T> for OntologyView {
     fn visit_subclass_of(&mut self, sco: &SubClassOf<T>, target: &T) {
         self.is_asserted_subclass_expression_of.insert(((&sco.sub).into(), (&sco.sup).into()));
         for sub in Self::derive_subclasses_of_class_expression(&sco.sub) {

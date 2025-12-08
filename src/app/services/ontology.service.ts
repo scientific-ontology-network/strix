@@ -10,6 +10,9 @@ export interface OntologyData {
 
   objectPropertyRoots: string[];
   isAssertedSuperObjectPropertyOf: Map<string, string[]>;
+
+  dependencies: Map<string, string[]>;
+  dependencyRoots: string[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -20,6 +23,8 @@ export class OntologyService {
     isAssertedSuperclassOf: new Map(),
     objectPropertyRoots: [],
     isAssertedSuperObjectPropertyOf: new Map(),
+    dependencies: new Map(),
+      dependencyRoots: [],
   });
   readonly selectedClassId = signal<string | null>(null);
   readonly selectedObjectPropertyId = signal<string | null>(null);
@@ -28,13 +33,15 @@ export class OntologyService {
   load(path: string) {
       invoke('load_ontology', {path: path}).then(
         // @ts-ignore
-        ((classHierarchy) => {
+        (([classHierarchy, dependencyMap, dependencyRoots]) => {
           // @ts-ignore
           let labelMap = new Map(Object.entries(classHierarchy.labels));
           // @ts-ignore
           let directSubclasses =  new Map(Object.entries(classHierarchy.is_asserted_superclass_of));
           // @ts-ignore
           let directSubproperties =  new Map(Object.entries(classHierarchy.is_asserted_super_object_property_of));
+          // @ts-ignore
+          let dependencies = new Map(Object.entries(dependencyMap));
 
           // @ts-ignore
           this.ontologyData.set({
@@ -48,6 +55,10 @@ export class OntologyService {
             objectPropertyRoots: classHierarchy.object_property_roots,
             // @ts-ignore
             isAssertedSuperObjectPropertyOf: directSubproperties,
+              // @ts-ignore
+              dependencies: dependencies,
+              //@ts-ignore
+              dependencyRoots: dependencyRoots
           });
           // reset selection
           // @ts-ignore

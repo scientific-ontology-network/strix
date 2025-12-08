@@ -1,21 +1,25 @@
 use std::collections::{HashMap, HashSet};
+use std::hash::Hash;
 use std::time::SystemTime;
-use horned_owl::model::{ArcStr, Class, ClassExpression, ForIRI, ObjectPropertyExpression, Ontology, IRI};
+use horned_owl::model::{ArcStr, Class, ClassExpression, ForIRI, ObjectProperty, ObjectPropertyExpression, Ontology, IRI};
 use horned_owl::model::Component::SubClassOf;
 use horned_owl::model::HigherKind::Axiom;
 use horned_owl::ontology::indexed::{ForIndex, OneIndexedOntology, OntologyIndex};
 use horned_owl::ontology::set::SetOntology;
-use strix_roost::dependency::base::{DependencyBuilder, DependencyMap, OntologySymbol};
+use strix_roost::dependency::base::{reduce_map, DependencyBuilder, DependencyMap, OntologySymbol};
 use strix_roost::dependency::growth::GrowthDependency;
 use crate::onto::owl::class::ClassDetails;
 use crate::onto::owl::visitor::AxiomVisitor;
-use crate::onto::owl::hierarchy::ClassHierarchy;
+use crate::onto::owl::hierarchy::OntologyView;
 use crate::onto::serialize::OntologySymbolView;
 
 #[derive(Default)]
 pub struct StrixState<T> where T: ForIRI  {
     ontology: SetOntology<T>,
     dependencies: HashMap<T, HashSet<OntologySymbolView>>,
+    pub(crate) reduced_dependencies: HashMap<T, HashSet<T>>,
+    pub(crate) dependency_roots: HashSet<T>,
+
 }
 
 impl<T> StrixState<T> where T: ForIRI {
@@ -40,13 +44,21 @@ impl<T> StrixState<T> where T: ForIRI {
     pub fn calculate_roots(&self){
 
     }
-    pub fn get_hierarchy(&self) -> ClassHierarchy {
-        ClassHierarchy::new(&self.ontology)
+    pub fn get_hierarchy(&self) -> OntologyView {
+        OntologyView::new(&self.ontology)
     }
 
     fn compute_dependencies(&mut self) {
+
         let dependency_map = GrowthDependency::build_dependencies(self.ontology.i().into_iter());
-        let dependency_map = GrowthDependency::remove_supers(dependency_map, self.ontology.i().into_iter());
+        let reduced_dependency_map = reduce_map(&dependency_map);
+        println!("{:?}", reduced_dependency_map);
+        let dependency_map = GrowthDependency::remove_super_expressions(dependency_map, self.ontology.i().into_iter());
+        let symbol_dependency = GrowthDependency::remove_super_symbols(&reduced_dependency_map, self.ontology.i().into_iter());
+        println!("{:?}", symbol_dependency);
+        self.reduced_dependencies = invert_map(&symbol_dependency);
+        println!("{:?}", self.reduced_dependencies);
+        self.dependency_roots = find_roots(&self.reduced_dependencies);
         for (k,v) in dependency_map.iter() {
             match k {
                 OntologySymbol::CE(ClassExpression::Class(iri)) => {
@@ -59,9 +71,33 @@ impl<T> StrixState<T> where T: ForIRI {
             }
         }
     }
+}
 
-    pub fn digest_dependencies(&mut self, dependency_map: DependencyMap<T>){
 
+fn find_roots<T>(m: &HashMap<T, HashSet<T>>) -> HashSet<T>
+where
+    T: Eq + Hash + Clone,
+{
+    let mut all_children = HashSet::new();
+    for children in m.values() {
+        all_children.extend(children.iter().cloned());
     }
 
+    m.keys()
+        .filter(|k| !all_children.contains(*k))
+        .cloned()
+        .collect()
+}
+pub fn invert_map<T: ForIRI>(map: &HashMap<T, HashSet<T>>) -> HashMap<T, HashSet<T>> {
+    let mut new_map: HashMap<T, HashSet<T>> = HashMap::new();
+    for (k,vset) in map {
+        for v in vset {
+            if !new_map.contains_key(&v) {
+                new_map.insert(v.clone(), HashSet::new());
+            }
+            let l = new_map.get_mut(&v).unwrap();
+            l.insert(k.clone());
+        }
+    }
+    new_map
 }

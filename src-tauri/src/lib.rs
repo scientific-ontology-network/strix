@@ -1,6 +1,7 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 mod onto;
 
+use std::collections::{HashMap, HashSet};
 use horned_owl::model::{ArcStr, Build, ForIRI, Ontology, IRI};
 use strix_roost::ontology::io::load_set_ontology;
 use onto::owl::class::ClassDetails;
@@ -11,19 +12,20 @@ use strix_roost::dependency::base::{DependencyBuilder, DependencyMap, OntologySy
 use serde_json::{json, Value};
 use tauri::{Manager, State};
 use strix_roost::util::error::StrixError;
-use crate::onto::owl::hierarchy::ClassHierarchy;
+use crate::onto::owl::hierarchy::OntologyView;
 use crate::onto::state::StrixState;
+use crate::onto::serialize::OntologySymbolView;
 
 
 #[tauri::command]
-fn load_ontology<'a>(raw_state: State<'a, Mutex<StrixState<ArcStr>>>, path: &str) -> Result<ClassHierarchy, StrixError>{
+fn load_ontology<'a>(raw_state: State<'a, Mutex<StrixState<ArcStr>>>, path: &str) -> Result<(OntologyView, HashMap<ArcStr, HashSet<ArcStr>>, HashSet<ArcStr>), StrixError>{
     let mut state = raw_state.lock().unwrap();
     let start = SystemTime::now();
     state.set_ontology(load_set_ontology(path));
     println!("Ontology loaded in {:?}", start.elapsed().unwrap());
     let hier = state.get_hierarchy();
 
-    Ok(hier)
+    Ok((hier, state.reduced_dependencies.clone(), state.dependency_roots.clone()))
 }
 
 #[tauri::command]
