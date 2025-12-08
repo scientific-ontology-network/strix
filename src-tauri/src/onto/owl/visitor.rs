@@ -18,93 +18,94 @@ pub(crate) trait AxiomVisitor<T: ForIRI> {
         }
         (is_contained, rest)
     }
-    fn visit_ontology_id(&mut self, oid: &OntologyID<T>, target: &T) {}
 
-    fn visit_ontology_annotation(&mut self, ann: &Annotation<T>, target: &T) {}
+    fn visit_ontology_id(&mut self, _oid: &OntologyID<T>, _target: &T) {}
 
-    fn visit_import(&mut self, iri: &IRI<T>, target: &T) {}
+    fn visit_ontology_annotation(&mut self, _ann: &Annotation<T>, _target: &T) {}
 
-    fn visit_declare_class(&mut self, cls: &Class<T>, target: &T) {}
+    fn visit_import(&mut self, _iri: &IRI<T>, _target: &T) {}
 
-    fn visit_declare_object_property(&mut self, op: &ObjectProperty<T>, target: &T) {}
+    fn visit_declare_class(&mut self, _cls: &Class<T>, _target: &T) {}
 
-    fn visit_declare_annotation_property(&mut self, ap: &AnnotationProperty<T>, target: &T) {}
+    fn visit_declare_object_property(&mut self, _op: &ObjectProperty<T>, _target: &T) {}
 
-    fn visit_declare_data_property(&mut self, dp: &DataProperty<T>, target: &T) {}
+    fn visit_declare_annotation_property(&mut self, _ap: &AnnotationProperty<T>, _target: &T) {}
+
+    fn visit_declare_data_property(&mut self, _dp: &DataProperty<T>, _target: &T) {}
 
 
-    fn visit_declare_named_individual(&mut self, ni: &NamedIndividual<T>, target: &T) {}
+    fn visit_declare_named_individual(&mut self, _ni: &NamedIndividual<T>, _target: &T) {}
 
-    fn visit_declare_datatype(&mut self, dt: &Datatype<T>, target: &T) {}
+    fn visit_declare_datatype(&mut self, _dt: &Datatype<T>, _target: &T) {}
 
-    fn visit_subclass_of(&mut self, sco: &SubClassOf<T>, target: &T) {}
+    fn visit_subclass_of(&mut self, _sco: &SubClassOf<T>, _target: &T) {}
 
-    fn visit_equivalent_classes(&mut self, cs: &Vec<ClassExpression<T>>, target: &T) {}
+    fn visit_equivalent_classes(&mut self, _cs: &Vec<ClassExpression<T>>, _target: &T) {}
 
-    fn visit_disjoint_classes(&mut self, cs: &Vec<ClassExpression<T>>, target: &T) {}
+    fn visit_disjoint_classes(&mut self, _cs: &Vec<ClassExpression<T>>, _target: &T) {}
 
-    fn visit_disjoint_union(&mut self, c: &Class<T>, cs: &Vec<ClassExpression<T>>, target: &T) {}
+    fn visit_disjoint_union(&mut self, _c: &Class<T>, _cs: &Vec<ClassExpression<T>>, _target: &T) {}
 
     fn visit_sub_object_property_of(
         &mut self,
-        sub: &SubObjectPropertyExpression<T>,
-        sup: &ObjectPropertyExpression<T>,
-        target: &T,
+        _sub: &SubObjectPropertyExpression<T>,
+        _sup: &ObjectPropertyExpression<T>,
+        _target: &T,
     ) {}
 
-    fn visit_equivalent_object_properties(&mut self, es: &Vec<ObjectPropertyExpression<T>>, target: &T) {}
+    fn visit_equivalent_object_properties(&mut self, _es: &Vec<ObjectPropertyExpression<T>>, _target: &T) {}
 
-    fn visit_disjoint_object_properties(&mut self, es: &Vec<ObjectPropertyExpression<T>>, target: &T) {}
+    fn visit_disjoint_object_properties(&mut self, _es: &Vec<ObjectPropertyExpression<T>>, _target: &T) {}
 
     fn visit_inverse_object_properties(
         &mut self,
-        a: &ObjectProperty<T>,
-        b: &ObjectProperty<T>,
-        target: &T,
+        _a: &ObjectProperty<T>,
+        _b: &ObjectProperty<T>,
+        _target: &T,
     ) {}
 
-    fn visit_object_property_domain(&mut self, op: &ObjectProperty<T>, ce: &ClassExpression<T>, target: &T) {}
+    fn visit_object_property_domain(&mut self, _op: &ObjectProperty<T>, _ce: &ClassExpression<T>, _target: &T) {}
 
-    fn visit_object_property_range(&mut self, op: &ObjectProperty<T>, ce: &ClassExpression<T>, target: &T) {}
+    fn visit_object_property_range(&mut self, _op: &ObjectProperty<T>, _ce: &ClassExpression<T>, _target: &T) {}
 
-    fn visit_functional_object_property(&mut self, op: &ObjectProperty<T>, target: &T) {}
+    fn visit_functional_object_property(&mut self, _op: &ObjectProperty<T>, _target: &T) {}
 
-    fn visit_inverse_functional_object_property(&mut self, op: &ObjectProperty<T>, target: &T) {}
+    fn visit_inverse_functional_object_property(&mut self, _op: &ObjectProperty<T>, _target: &T) {}
 
-    fn visit_reflexive_object_property(&mut self, op: &ObjectProperty<T>, target: &T) {}
+    fn visit_reflexive_object_property(&mut self, _op: &ObjectProperty<T>, _target: &T) {}
 
-    fn visit_irreflexive_object_property(&mut self, op: &ObjectProperty<T>, target: &T) {}
+    fn visit_irreflexive_object_property(&mut self, _op: &ObjectProperty<T>, _target: &T) {}
 
-    fn visit_symmetric_object_property(&mut self, op: &ObjectProperty<T>, target: &T) {}
-    fn visit_asymmetric_object_property(&mut self, op: &ObjectProperty<T>, target: &T) {}
+    fn visit_symmetric_object_property(&mut self, _op: &ObjectProperty<T>, _target: &T) {}
+    fn visit_asymmetric_object_property(&mut self, _op: &ObjectProperty<T>, _target: &T) {}
 
-    fn visit_transitive_object_property(&mut self, op: &ObjectProperty<T>, target: &T) {}
+    fn visit_transitive_object_property(&mut self, _op: &ObjectProperty<T>, _target: &T) {}
 
-    fn visit_sub_data_property_of(&mut self, sub: &DataProperty<T>, sup: &DataProperty<T>, target: &T) {}
+    fn visit_sub_data_property_of(&mut self, _sub: &DataProperty<T>, _sup: &DataProperty<T>, _target: &T) {}
 
-    fn visit_equivalent_data_properties(&mut self, es: &Vec<DataProperty<T>>, target: &T) {}
+    fn visit_equivalent_data_properties(&mut self, _es: &Vec<DataProperty<T>>, _target: &T) {}
 
-    fn visit_disjoint_data_properties(&mut self, es: &Vec<DataProperty<T>>, target: &T) {}
+    fn visit_disjoint_data_properties(&mut self, _es: &Vec<DataProperty<T>>, _target: &T) {}
 
-    fn visit_data_property_domain(&mut self, dp: &DataProperty<T>, ce: &ClassExpression<T>, target: &T) {}
+    fn visit_data_property_domain(&mut self, _dp: &DataProperty<T>, _ce: &ClassExpression<T>, _target: &T) {}
 
-    fn visit_data_property_range(&mut self, dp: &DataProperty<T>, dr: &DataRange<T>, target: &T) {}
+    fn visit_data_property_range(&mut self, _dp: &DataProperty<T>, _dr: &DataRange<T>, _target: &T) {}
 
-    fn visit_functional_data_property(&mut self, dp: &DataProperty<T>, target: &T) {}
+    fn visit_functional_data_property(&mut self, _dp: &DataProperty<T>, _target: &T) {}
 
-    fn visit_datatype_definition(&mut self, kind: &Datatype<T>, range: &DataRange<T>, target: &T) {}
+    fn visit_datatype_definition(&mut self, _kind: &Datatype<T>, _range: &DataRange<T>, _target: &T) {}
 
-    fn visit_same_individual(&mut self, es: &Vec<Individual<T>>, target: &T) {}
+    fn visit_same_individual(&mut self, _es: &Vec<Individual<T>>, _target: &T) {}
 
-    fn visit_different_individuals(&mut self, es: &Vec<Individual<T>>, target: &T) {}
+    fn visit_different_individuals(&mut self, _es: &Vec<Individual<T>>, _target: &T) {}
 
-    fn visit_class_assertion(&mut self, ce: &ClassExpression<T>, i: &Individual<T>, target: &T) {}
+    fn visit_class_assertion(&mut self, _ce: &ClassExpression<T>, _i: &Individual<T>, _target: &T) {}
 
     fn visit_annotation_assertion(
         &mut self,
-        subject: &AnnotationSubject<T>,
-        ann: &Annotation<T>,
-        target: &T,
+        _subject: &AnnotationSubject<T>,
+        _ann: &Annotation<T>,
+        _target: &T,
     ) {}
 
     fn visit_components<'a, S>(&mut self, components: S, target: &T)

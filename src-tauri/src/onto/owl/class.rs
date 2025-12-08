@@ -68,11 +68,11 @@ impl<T: ForIRI> AxiomVisitor<T> for ClassDetails<T> {
     }
 
     fn visit_disjoint_union(&mut self, c: &Class<T>, cs: &Vec<ClassExpression<T>>, target: &T) {
-        if let Class(iri) = c {
-            if iri.underlying() == *target {
-                self.disjoint_union_of.push(cs.iter().map(|c| ClassExpressionView::from(c)).collect::<Vec<_>>())
-            }
+        let Class(iri) = c;
+        if iri.underlying() == *target {
+            self.disjoint_union_of.push(cs.iter().map(|c| ClassExpressionView::from(c)).collect::<Vec<_>>())
         }
+        
     }
 
     fn visit_class_assertion(&mut self, ce: &ClassExpression<T>, i: &Individual<T>, target: &T) {

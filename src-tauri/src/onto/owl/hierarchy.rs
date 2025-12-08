@@ -64,24 +64,23 @@ impl OntologyView {
             SubObjectPropertyExpression::ObjectPropertyExpression(ope) =>
                 match ope {
                     ObjectPropertyExpression::ObjectProperty(op) => { vec![op.0.to_string()] }
-                    ObjectPropertyExpression::InverseObjectProperty(op) => { Vec::new() }
+                    ObjectPropertyExpression::InverseObjectProperty(_) => { Vec::new() }
                 }
-            SubObjectPropertyExpression::ObjectPropertyChain(cs) => { Vec::new() },
-            _ => Vec::new()
+            SubObjectPropertyExpression::ObjectPropertyChain(_) => { Vec::new() },
         }
     }
 
     fn derive_superroles_of_object_property_expression<T: ForIRI>(ope: &ObjectPropertyExpression<T>) -> Vec<String> {
         match ope {
             ObjectPropertyExpression::ObjectProperty(op) => { vec![op.0.to_string()] }
-            ObjectPropertyExpression::InverseObjectProperty(op) => { Vec::new() }
+            ObjectPropertyExpression::InverseObjectProperty(_) => { Vec::new() }
         }
 
     }
 }
 
 impl<T: ForIRI>  AxiomVisitor<T> for OntologyView {
-    fn visit_subclass_of(&mut self, sco: &SubClassOf<T>, target: &T) {
+    fn visit_subclass_of(&mut self, sco: &SubClassOf<T>, _target: &T) {
         self.is_asserted_subclass_expression_of.insert(((&sco.sub).into(), (&sco.sup).into()));
         for sub in Self::derive_subclasses_of_class_expression(&sco.sub) {
             for sup in Self::derive_superclasses_of_class_expression(&sco.sup){
@@ -91,11 +90,11 @@ impl<T: ForIRI>  AxiomVisitor<T> for OntologyView {
 
     }
 
-    fn visit_equivalent_classes(&mut self, cs: &Vec<ClassExpression<T>>, target: &T) {
+    fn visit_equivalent_classes(&mut self, cs: &Vec<ClassExpression<T>>, _target: &T) {
         self.equivalent_classes.push(cs.iter().map(|c| c.into()).collect())
     }
 
-    fn visit_annotation_assertion(&mut self, subject: &AnnotationSubject<T>, ann: &Annotation<T>, target: &T) {
+    fn visit_annotation_assertion(&mut self, subject: &AnnotationSubject<T>, ann: &Annotation<T>, _target: &T) {
         if ann.ap.0.underlying().to_string() == "http://www.w3.org/2000/01/rdf-schema#label" {
             match subject {
                 AnnotationSubject::IRI(subject_iri) => {
@@ -106,7 +105,7 @@ impl<T: ForIRI>  AxiomVisitor<T> for OntologyView {
         }
     }
 
-    fn visit_sub_object_property_of(&mut self, sub: &SubObjectPropertyExpression<T>, sup: &ObjectPropertyExpression<T>, target: &T) {
+    fn visit_sub_object_property_of(&mut self, sub: &SubObjectPropertyExpression<T>, sup: &ObjectPropertyExpression<T>, _target: &T) {
         self.is_asserted_sub_object_property_expression_of.insert((sub.into(), sup.into()));
         for sub in Self::derive_subroles_of_object_property_expression(sub) {
             for sup in Self::derive_superroles_of_object_property_expression(sup){
@@ -115,7 +114,7 @@ impl<T: ForIRI>  AxiomVisitor<T> for OntologyView {
         }
     }
 
-    fn visit_equivalent_object_properties(&mut self, es: &Vec<ObjectPropertyExpression<T>>, target: &T) {
+    fn visit_equivalent_object_properties(&mut self, es: &Vec<ObjectPropertyExpression<T>>, _target: &T) {
         self.equivalent_object_properties.push(es.iter().map(|c| c.into()).collect())
     }
 }

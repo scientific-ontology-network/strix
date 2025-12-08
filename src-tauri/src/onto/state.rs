@@ -1,8 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
-use std::time::SystemTime;
 use horned_owl::model::{ClassExpression, ForIRI, ObjectPropertyExpression};
-use horned_owl::ontology::indexed::ForIndex;
 use horned_owl::ontology::set::SetOntology;
 use strix_roost::dependency::base::{reduce_map, DependencyBuilder, OntologySymbol};
 use strix_roost::dependency::growth::GrowthDependency;
@@ -31,17 +29,12 @@ impl<T> StrixState<T> where T: ForIRI {
         &self,
         iri: &T
     ) -> ClassDetails<T> {
-
-        let start = SystemTime::now();
         let mut cd = ClassDetails::default();
         cd.visit_components(self.ontology.i().iter(), iri);
         cd.depends_on = self.dependencies.get(iri).unwrap_or(&HashSet::new()).clone();
         cd
     }
 
-    pub fn calculate_roots(&self){
-
-    }
     pub fn get_hierarchy(&self) -> OntologyView {
         OntologyView::new(&self.ontology)
     }
