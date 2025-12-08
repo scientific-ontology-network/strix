@@ -1,8 +1,7 @@
 use std::collections::HashMap;
-use horned_owl::model::{AnnotationValue, ForIRI, IRI};
+use horned_owl::model::ForIRI;
 use serde::{Serialize, Serializer};
 use serde::ser::SerializeStruct;
-use crate::onto::owl::property::ObjectPropertyDetails;
 use crate::onto::serialize::AnnotationValueView;
 
 pub struct AnnotationPropertyDetails< T>

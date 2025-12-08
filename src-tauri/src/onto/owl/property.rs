@@ -1,10 +1,8 @@
 use std::collections::{HashMap};
-use horned_owl::model::{AnnotationValue, Class, ClassExpression, DataProperty, DataRange, ForIRI, ObjectProperty, ObjectPropertyExpression, SubObjectPropertyExpression, IRI};
-use strix_roost::dependency::base::OntologySymbol;
+use horned_owl::model::ForIRI;
 use serde::{Serialize, Serializer};
 use serde::ser::SerializeStruct;
 use crate::onto::serialize::{AnnotationValueView, ClassExpressionView, DataPropertyView, DataRangeView, ObjectPropertyExpressionView, OntologySymbolView, SubObjectPropertyExpressionView};
-use crate::onto::owl::class::ClassDetails;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ObjectPropertyDetails<T>

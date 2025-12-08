@@ -1,11 +1,8 @@
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
-use std::sync::Arc;
 use horned_owl::model::{Annotation, AnnotationSubject, Class, ClassExpression, ForIRI, ObjectPropertyExpression, SubClassOf, SubObjectPropertyExpression};
 use horned_owl::ontology::set::SetOntology;
-use petgraph::graph::DiGraph;
 use serde::Serialize;
-use crate::onto::owl::class::ClassDetails;
 use crate::onto::owl::visitor::AxiomVisitor;
 use crate::onto::serialize::{AnnotationValueView, ClassExpressionView, ObjectPropertyExpressionView, SubObjectPropertyExpressionView};
 

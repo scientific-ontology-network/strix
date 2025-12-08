@@ -1,12 +1,10 @@
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 use std::time::SystemTime;
-use horned_owl::model::{ArcStr, Class, ClassExpression, ForIRI, ObjectProperty, ObjectPropertyExpression, Ontology, IRI};
-use horned_owl::model::Component::SubClassOf;
-use horned_owl::model::HigherKind::Axiom;
-use horned_owl::ontology::indexed::{ForIndex, OneIndexedOntology, OntologyIndex};
+use horned_owl::model::{ClassExpression, ForIRI, ObjectPropertyExpression};
+use horned_owl::ontology::indexed::ForIndex;
 use horned_owl::ontology::set::SetOntology;
-use strix_roost::dependency::base::{reduce_map, DependencyBuilder, DependencyMap, OntologySymbol};
+use strix_roost::dependency::base::{reduce_map, DependencyBuilder, OntologySymbol};
 use strix_roost::dependency::growth::GrowthDependency;
 use crate::onto::owl::class::ClassDetails;
 use crate::onto::owl::visitor::AxiomVisitor;

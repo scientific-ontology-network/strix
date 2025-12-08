@@ -1,10 +1,7 @@
 use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
-use horned_owl::model::{AnnotatedComponent, Annotation, AnnotationSubject, AnnotationValue, Class, ClassExpression, ForIRI, Individual, SubClassOf, IRI};
-use strix_roost::dependency::base::OntologySymbol;
+use horned_owl::model::{Annotation, AnnotationSubject, Class, ClassExpression, ForIRI, Individual, SubClassOf};
 use serde::{Serialize, Serializer};
 use serde::ser::SerializeStruct;
-use ts_rs::TS;
 use crate::onto::serialize::{AnnotationValueView, ClassExpressionView, IndividualView, OntologySymbolView};
 use crate::onto::owl::visitor::AxiomVisitor;
 
@@ -91,7 +88,7 @@ impl<T: ForIRI> AxiomVisitor<T> for ClassDetails<T> {
             AnnotationSubject::IRI(iri) => {
                 if iri.underlying() == *target {
                     let ann_iri = ann.ap.underlying();
-                    let mut annos = self.annotations.entry(ann_iri).or_insert_with(Vec::new);
+                    let annos = self.annotations.entry(ann_iri).or_insert_with(Vec::new);
                     annos.push((&ann.av).into())
                 }
             }

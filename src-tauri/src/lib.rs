@@ -2,19 +2,15 @@
 mod onto;
 
 use std::collections::{HashMap, HashSet};
-use horned_owl::model::{ArcStr, Build, ForIRI, Ontology, IRI};
+use horned_owl::model::{ArcStr, Build};
 use strix_roost::ontology::io::load_set_ontology;
 use onto::owl::class::ClassDetails;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 use std::time::SystemTime;
-use horned_owl::ontology::set::SetOntology;
-use strix_roost::dependency::base::{DependencyBuilder, DependencyMap, OntologySymbol};
-use serde_json::{json, Value};
 use tauri::{Manager, State};
 use strix_roost::util::error::StrixError;
 use crate::onto::owl::hierarchy::OntologyView;
 use crate::onto::state::StrixState;
-use crate::onto::serialize::OntologySymbolView;
 
 
 #[tauri::command]
@@ -30,7 +26,7 @@ fn load_ontology<'a>(raw_state: State<'a, Mutex<StrixState<ArcStr>>>, path: &str
 
 #[tauri::command]
 fn get_class_details<'a>(state: State<'a, Mutex<StrixState<ArcStr>>>, s: &str) -> Result<ClassDetails<ArcStr>, StrixError>{
-    let mut state = state.lock().unwrap();
+    let state = state.lock().unwrap();
     let b_arc = Build::new_arc();
     let iri = b_arc.iri(s.to_string());
     Ok(state.get_class_details(&iri.underlying()))
