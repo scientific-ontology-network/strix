@@ -43,12 +43,9 @@ impl<T> StrixState<T> where T: ForIRI {
 
         let dependency_map = GrowthDependency::build_dependencies(self.ontology.i().into_iter());
         let reduced_dependency_map = reduce_map(&dependency_map);
-        println!("{:?}", reduced_dependency_map);
         let dependency_map = GrowthDependency::remove_super_expressions(dependency_map, self.ontology.i().into_iter());
         let symbol_dependency = GrowthDependency::remove_super_symbols(&reduced_dependency_map, self.ontology.i().into_iter());
-        println!("{:?}", symbol_dependency);
         self.reduced_dependencies = invert_map(&symbol_dependency);
-        println!("{:?}", self.reduced_dependencies);
         self.dependency_roots = find_roots(&self.reduced_dependencies);
         for (k,v) in dependency_map.iter() {
             match k {
