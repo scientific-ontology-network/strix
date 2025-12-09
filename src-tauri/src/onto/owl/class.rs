@@ -3,7 +3,7 @@ use horned_owl::model::{Annotation, AnnotationSubject, Class, ClassExpression, F
 use serde::{Serialize, Serializer};
 use serde::ser::SerializeStruct;
 use crate::onto::serialize::{AnnotationValueView, ClassExpressionView, IndividualView, OntologySymbolView};
-use crate::onto::owl::visitor::AxiomVisitor;
+use strix_roost::ontology::visitor::AxiomVisitor;
 
 pub struct ClassDetails<T>
 where

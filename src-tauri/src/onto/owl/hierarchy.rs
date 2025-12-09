@@ -3,7 +3,7 @@ use std::hash::Hash;
 use horned_owl::model::{Annotation, AnnotationSubject, Class, ClassExpression, ForIRI, ObjectPropertyExpression, SubClassOf, SubObjectPropertyExpression};
 use horned_owl::ontology::set::SetOntology;
 use serde::Serialize;
-use crate::onto::owl::visitor::AxiomVisitor;
+use strix_roost::ontology::visitor::AxiomVisitor;
 use crate::onto::serialize::{AnnotationValueView, ClassExpressionView, ObjectPropertyExpressionView, SubObjectPropertyExpressionView};
 
 #[derive(Default, Serialize)]

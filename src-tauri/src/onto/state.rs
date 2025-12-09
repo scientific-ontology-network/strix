@@ -5,7 +5,7 @@ use horned_owl::ontology::set::SetOntology;
 use strix_roost::dependency::base::{reduce_map, DependencyBuilder, OntologySymbol};
 use strix_roost::dependency::growth::GrowthDependency;
 use crate::onto::owl::class::ClassDetails;
-use crate::onto::owl::visitor::AxiomVisitor;
+use strix_roost::ontology::visitor::AxiomVisitor;
 use crate::onto::owl::hierarchy::OntologyView;
 use crate::onto::serialize::OntologySymbolView;
 
