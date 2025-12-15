@@ -2,8 +2,9 @@ use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 use horned_owl::model::{ClassExpression, ForIRI, ObjectPropertyExpression};
 use horned_owl::ontology::set::SetOntology;
-use strix_roost::dependency::base::{reduce_map, DependencyBuilder, OntologySymbol};
-use strix_roost::dependency::growth::GrowthDependency;
+use strix_roost::dependency::base::{reduce_map, DependencyBuilder};
+use strix_roost::dependency::symbol::{DependencyMap, DependencySymbol, DependencySymbolWithAxioms, OntologySymbol, SymbolContainer};
+use strix_roost::dependency::growth::{GrowthDependency, remove_super_expressions, remove_super_symbols, invert_map};
 use crate::onto::owl::class::ClassDetails;
 use strix_roost::ontology::visitor::AxiomVisitor;
 use crate::onto::owl::hierarchy::OntologyView;
@@ -41,19 +42,20 @@ impl<T> StrixState<T> where T: ForIRI {
 
     fn compute_dependencies(&mut self) {
 
-        let dependency_map = GrowthDependency::build_dependencies(self.ontology.i().into_iter());
+        let dependency_map: DependencyMap<OntologySymbol<T>, DependencySymbol<OntologySymbol<T>>> = GrowthDependency::build_dependencies(self.ontology.i().into_iter());
         let reduced_dependency_map = reduce_map(&dependency_map);
-        let dependency_map = GrowthDependency::remove_super_expressions(dependency_map, self.ontology.i().into_iter());
-        let symbol_dependency = GrowthDependency::remove_super_symbols(&reduced_dependency_map, self.ontology.i().into_iter());
-        self.reduced_dependencies = invert_map(&symbol_dependency);
+        let dependency_map = remove_super_expressions(dependency_map, self.ontology.i().into_iter(), |v|v.clone());
+        let symbol_dependency = remove_super_symbols(&reduced_dependency_map, self.ontology.i().into_iter(), |v|v.clone());
+        let reduced_dependencies = invert_map::<OntologySymbol<'_, T>, (), DependencySymbol<OntologySymbol<'_, T>>>(&symbol_dependency).iter().map(|(k,vs)| (k.get_iri().unwrap(),vs.iter().map(|v | <DependencySymbol<OntologySymbol<'_, T>> as SymbolContainer<OntologySymbol<'_, T>, ()>>::get_symbol(v).get_iri().unwrap()).collect())).collect();
+        self.reduced_dependencies = reduced_dependencies;
         self.dependency_roots = find_roots(&self.reduced_dependencies);
         for (k,v) in dependency_map.iter() {
             match k {
                 OntologySymbol::CE(ClassExpression::Class(iri)) => {
-                    self.dependencies.insert(iri.underlying(), v.iter().map(|x|x.into()).collect());
+                    self.dependencies.insert(iri.underlying(), v.iter().map(|x|<DependencySymbol<OntologySymbol<'_, T>> as SymbolContainer<OntologySymbol<'_, T>, ()>>::get_symbol(x).into()).collect());
                 }
                 OntologySymbol::Role(ObjectPropertyExpression::ObjectProperty(iri)) => {
-                    self.dependencies.insert(iri.underlying(), v.iter().map(|x|x.into()).collect());
+                    self.dependencies.insert(iri.underlying(), v.iter().map(|x|<DependencySymbol<OntologySymbol<'_, T>> as SymbolContainer<OntologySymbol<'_, T>, ()>>::get_symbol(x).into()).collect());
                 }
                 _ => {}
             }
@@ -68,24 +70,11 @@ where
 {
     let mut all_children = HashSet::new();
     for children in m.values() {
-        all_children.extend(children.iter().cloned());
+        all_children.extend(children.iter().map(|sc| sc).cloned());
     }
 
     m.keys()
-        .filter(|k| !all_children.contains(*k))
+        .filter(|&k| !all_children.contains(k))
         .cloned()
         .collect()
-}
-pub fn invert_map<T: ForIRI>(map: &HashMap<T, HashSet<T>>) -> HashMap<T, HashSet<T>> {
-    let mut new_map: HashMap<T, HashSet<T>> = HashMap::new();
-    for (k,vset) in map {
-        for v in vset {
-            if !new_map.contains_key(&v) {
-                new_map.insert(v.clone(), HashSet::new());
-            }
-            let l = new_map.get_mut(&v).unwrap();
-            l.insert(k.clone());
-        }
-    }
-    new_map
 }
