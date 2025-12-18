@@ -77,7 +77,7 @@ import { MatExpansionModule, MatAccordion, MatExpansionPanel, MatExpansionPanelH
               <div>
                 <mat-expansion-panel>
                   <mat-expansion-panel-header>
-                    <mat-panel-title> dependencies </mat-panel-title>
+                    <mat-panel-title> Dependencies </mat-panel-title>
                   </mat-expansion-panel-header>
                   <app-hierarchy-tree
                       [hierarchy]="svc.ontologyData().dependencies"
