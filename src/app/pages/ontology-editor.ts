@@ -5,12 +5,13 @@ import {HierarchyTreeComponent} from '../components/hierarchy-tree';
 import {ClassDetailComponent} from '../components/class/class-detail';
 import {OntologyService} from '../services/ontology.service';
 import {StorageService} from '../services/storage.service';
+import { MatExpansionModule, MatAccordion, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle } from '@angular/material/expansion';
 
 // @ts-ignore
 @Component({
   selector: 'app-ontology-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, HierarchyTreeComponent, ClassDetailComponent],
+  imports: [CommonModule, FormsModule, HierarchyTreeComponent, ClassDetailComponent, MatAccordion, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle],
   template: `
     <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 text-slate-900">
       <!-- Top Bar -->
@@ -40,36 +41,55 @@ import {StorageService} from '../services/storage.service';
                      placeholder="Search classes…"
                      class="w-full rounded-md border-slate-300 focus:border-primary-500 focus:ring-primary-500 text-sm"/>
             </div>
-            <div class="p-3 border-b border-slate-200">
-              <app-hierarchy-tree
-                  [hierarchy]="svc.ontologyData().isAssertedSuperclassOf"
-                  [roots]="svc.ontologyData().classRoots"
-                  [labels]="svc.ontologyData().labels"
-                  [selectedId]="svc.selectedClassId()"
-                  [searchQuery]="svc.searchQuery()"
-                  (selected)="svc.selectClass($event)"
-              />
-            </div>
-            <div>
-              <app-hierarchy-tree
-                  [hierarchy]="svc.ontologyData().isAssertedSuperObjectPropertyOf"
-                  [roots]="svc.ontologyData().objectPropertyRoots"
-                  [labels]="svc.ontologyData().labels"
-                  [selectedId]="svc.selectedObjectPropertyId()"
-                  [searchQuery]="svc.searchQuery()"
-                  (selected)="svc.selectClass($event)"
-              />
-            </div>
-            <div>
-              <app-hierarchy-tree
-                  [hierarchy]="svc.ontologyData().dependencies"
-                  [roots]="svc.ontologyData().dependencyRoots"
-                  [labels]="svc.ontologyData().labels"
-                  [selectedId]="svc.selectedObjectPropertyId()"
-                  [searchQuery]="svc.searchQuery()"
-                  (selected)="svc.selectClass($event)"
-              />
-            </div>
+            <mat-accordion class="object-class-collapsible">
+                <div class="p-3 border-b border-slate-200">
+                  <mat-expansion-panel>
+                    <mat-expansion-panel-header>
+                      <mat-panel-title> Classes </mat-panel-title>
+                    </mat-expansion-panel-header>
+                    <app-hierarchy-tree
+                        [hierarchy]="svc.ontologyData().isAssertedSuperclassOf"
+                        [roots]="svc.ontologyData().classRoots"
+                        [labels]="svc.ontologyData().labels"
+                        [selectedId]="svc.selectedClassId()"
+                        [searchQuery]="svc.searchQuery()"
+                        (selected)="svc.selectClass($event)"
+                      />
+                    </mat-expansion-panel>
+                  </div>
+                  
+              <div>
+                <mat-expansion-panel>
+                  <mat-expansion-panel-header>
+                    <mat-panel-title> Object Properties </mat-panel-title>
+                  </mat-expansion-panel-header>
+                  <app-hierarchy-tree
+                      [hierarchy]="svc.ontologyData().isAssertedSuperObjectPropertyOf"
+                      [roots]="svc.ontologyData().objectPropertyRoots"
+                      [labels]="svc.ontologyData().labels"
+                      [selectedId]="svc.selectedObjectPropertyId()"
+                      [searchQuery]="svc.searchQuery()"
+                      (selected)="svc.selectClass($event)"
+                  />
+                </mat-expansion-panel>
+              </div>
+            
+              <div>
+                <mat-expansion-panel>
+                  <mat-expansion-panel-header>
+                    <mat-panel-title> Dependencies </mat-panel-title>
+                  </mat-expansion-panel-header>
+                  <app-hierarchy-tree
+                      [hierarchy]="svc.ontologyData().dependencies"
+                      [roots]="svc.ontologyData().dependencyRoots"
+                      [labels]="svc.ontologyData().labels"
+                      [selectedId]="svc.selectedObjectPropertyId()"
+                      [searchQuery]="svc.searchQuery()"
+                      (selected)="svc.selectClass($event)"
+                  />
+                </mat-expansion-panel>
+              </div> 
+            </mat-accordion>
           </aside>
           <section class="rounded-xl border border-slate-200 bg-white/80 backdrop-blur min-h-[420px]">
             @if (selected()) {
