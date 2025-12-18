@@ -5,13 +5,13 @@ import {HierarchyTreeComponent} from '../components/hierarchy-tree';
 import {ClassDetailComponent} from '../components/class/class-detail';
 import {OntologyService} from '../services/ontology.service';
 import {StorageService} from '../services/storage.service';
-import { MatExpansionModule, MatAccordion, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle } from '@angular/material/expansion';
+import {MatExpansionModule} from '@angular/material/expansion';
 
 // @ts-ignore
 @Component({
   selector: 'app-ontology-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, HierarchyTreeComponent, ClassDetailComponent, MatAccordion, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle],
+  imports: [CommonModule, FormsModule, HierarchyTreeComponent, ClassDetailComponent, MatExpansionModule],
   template: `
     <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 text-slate-900">
       <!-- Top Bar -->
