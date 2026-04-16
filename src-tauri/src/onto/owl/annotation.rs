@@ -1,10 +1,10 @@
-use std::collections::HashMap;
-use horned_owl::model::ForIRI;
-use serde::{Serialize, Serializer};
-use serde::ser::SerializeStruct;
 use crate::onto::serialize::AnnotationValueView;
+use horned_owl::model::ForIRI;
+use serde::ser::SerializeStruct;
+use serde::{Serialize, Serializer};
+use std::collections::HashMap;
 
-pub struct AnnotationPropertyDetails< T>
+pub struct AnnotationPropertyDetails<T>
 where
     T: ForIRI,
 {
@@ -22,9 +22,9 @@ impl<'a, T: ForIRI + Serialize> Serialize for AnnotationPropertyDetails<T> {
     }
 }
 
-impl<T: ForIRI> Default for AnnotationPropertyDetails<T>{
+impl<T: ForIRI> Default for AnnotationPropertyDetails<T> {
     fn default() -> Self {
-        AnnotationPropertyDetails{
+        AnnotationPropertyDetails {
             annotations: Default::default(),
         }
     }

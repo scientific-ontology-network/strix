@@ -1,6 +1,6 @@
-use std::collections::HashMap;
-use horned_owl::model::ForIRI;
 use crate::onto::serialize::AnnotationValueView;
+use horned_owl::model::ForIRI;
+use std::collections::HashMap;
 
 #[derive(Default)]
 pub struct OntologyDetails<T: ForIRI> {

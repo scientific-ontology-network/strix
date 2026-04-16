@@ -1,9 +1,8 @@
-use std::collections::{HashMap};
-use horned_owl::model::ForIRI;
-use serde::{Serialize, Serializer};
-use serde::ser::SerializeStruct;
 use crate::onto::serialize::{AnnotationValueView, ClassExpressionView, IndividualView};
-
+use horned_owl::model::ForIRI;
+use serde::ser::SerializeStruct;
+use serde::{Serialize, Serializer};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IndividualDetails<T>
@@ -31,9 +30,9 @@ impl<'a, T: ForIRI + Serialize> Serialize for IndividualDetails<T> {
     }
 }
 
-impl<T: ForIRI> Default for IndividualDetails<T>{
+impl<T: ForIRI> Default for IndividualDetails<T> {
     fn default() -> Self {
-        IndividualDetails{
+        IndividualDetails {
             annotations: Default::default(),
             sames: vec![],
             different: vec![],

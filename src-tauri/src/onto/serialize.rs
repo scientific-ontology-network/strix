@@ -1,10 +1,9 @@
 use horned_owl::model::*;
-use strix_roost::dependency::symbol::OntologySymbol;
 use serde::Serialize;
+use strix_roost::dependency::symbol::{Symbol, Term};
 use ts_rs::TS;
 
-#[derive(Serialize, Eq, PartialEq, Clone, Hash, Debug)]
-#[derive(TS)]
+#[derive(Serialize, Eq, PartialEq, Clone, Hash, Debug, TS)]
 #[ts(export)]
 #[serde(tag = "type")]
 pub enum ClassExpressionView {
@@ -81,57 +80,45 @@ pub enum ClassExpressionView {
         data_range: DataRangeView,
     },
 }
-#[derive(Serialize, Eq, PartialEq, Clone, Hash, Debug)]
-#[derive(TS)]
+#[derive(Serialize, Eq, PartialEq, Clone, Hash, Debug, TS)]
 #[ts(export)]
 #[serde(tag = "type")]
 pub enum ObjectPropertyExpressionView {
     ObjectProperty {
         iri: String,
     },
+    Composition {
+        parts: Vec<ObjectPropertyExpressionView>,
+    },
     InverseObjectProperty {
         property: String,
     },
 }
 
-#[derive(Serialize, Eq, PartialEq, Clone, Hash, Debug)]
-#[derive(TS)]
+#[derive(Serialize, Eq, PartialEq, Clone, Hash, Debug, TS)]
 #[ts(export)]
 #[serde(tag = "type")]
 pub enum DataPropertyView {
-    DataProperty {
-        iri: String,
-    },
+    DataProperty { iri: String },
 }
 
-#[derive(Serialize, Debug, Eq, PartialEq, Clone, Hash)]
-#[derive(TS)]
+#[derive(Serialize, Debug, Eq, PartialEq, Clone, Hash, TS)]
 #[ts(export)]
 #[serde(tag = "type")]
 pub enum LiteralView {
-    Simple {
-        value: String,
-    },
-    Language {
-        value: String,
-        language: String,
-    },
-    Datatype {
-        value: String,
-        datatype: String,
-    },
+    Simple { value: String },
+    Language { value: String, language: String },
+    Datatype { value: String, datatype: String },
 }
 
-#[derive(Serialize)]
-#[derive(TS)]
+#[derive(Serialize, TS)]
 #[ts(export)]
 pub struct AnnotationView {
     property: String,
     value: AnnotationValueView,
 }
 
-#[derive(Serialize, Debug, Clone, Eq, PartialEq, Hash)]
-#[derive(TS)]
+#[derive(Serialize, Debug, Clone, Eq, PartialEq, Hash, TS)]
 #[ts(export)]
 #[serde(untagged)]
 pub enum AnnotationValueView {
@@ -147,17 +134,23 @@ impl<T: ForIRI> From<&ClassExpression<T>> for ClassExpressionView {
             ClassExpression::Class(c) => ClassExpressionView::Class {
                 iri: c.0.to_string(),
             },
-            ClassExpression::ObjectSomeValuesFrom { ope, bce } => ClassExpressionView::ObjectSomeValuesFrom {
-                property: ope.into(),
-                class_expression: Box::new((&**bce).into()),
-            },
-            ClassExpression::ObjectAllValuesFrom { ope, bce } => ClassExpressionView::ObjectAllValuesFrom {
-                property: ope.into(),
-                class_expression: Box::new((&**bce).into()),
-            },
-            ClassExpression::ObjectIntersectionOf(classes) => ClassExpressionView::ObjectIntersectionOf {
-                operands: classes.iter().map(Into::into).collect(),
-            },
+            ClassExpression::ObjectSomeValuesFrom { ope, bce } => {
+                ClassExpressionView::ObjectSomeValuesFrom {
+                    property: ope.into(),
+                    class_expression: Box::new((&**bce).into()),
+                }
+            }
+            ClassExpression::ObjectAllValuesFrom { ope, bce } => {
+                ClassExpressionView::ObjectAllValuesFrom {
+                    property: ope.into(),
+                    class_expression: Box::new((&**bce).into()),
+                }
+            }
+            ClassExpression::ObjectIntersectionOf(classes) => {
+                ClassExpressionView::ObjectIntersectionOf {
+                    operands: classes.iter().map(Into::into).collect(),
+                }
+            }
             ClassExpression::ObjectUnionOf(classes) => ClassExpressionView::ObjectUnionOf {
                 operands: classes.iter().map(Into::into).collect(),
             },
@@ -174,48 +167,64 @@ impl<T: ForIRI> From<&ClassExpression<T>> for ClassExpressionView {
             ClassExpression::ObjectHasSelf(ope) => ClassExpressionView::ObjectHasSelf {
                 property: ope.into(),
             },
-            ClassExpression::ObjectMinCardinality { n, ope, bce } => ClassExpressionView::ObjectMinCardinality {
-                cardinality: *n,
-                property: ope.into(),
-                class_expression: Box::new((&**bce).into()),
-            },
-            ClassExpression::ObjectMaxCardinality { n, ope, bce } => ClassExpressionView::ObjectMaxCardinality {
-                cardinality: *n,
-                property: ope.into(),
-                class_expression: Box::new((&**bce).into()),
-            },
-            ClassExpression::ObjectExactCardinality { n, ope, bce } => ClassExpressionView::ObjectExactCardinality {
-                cardinality: *n,
-                property: ope.into(),
-                class_expression: Box::new((&**bce).into()),
-            },
-            ClassExpression::DataSomeValuesFrom { dp, dr } => ClassExpressionView::DataSomeValuesFrom {
-                property: dp.0.to_string(),
-                data_range: dr.into(),
-            },
-            ClassExpression::DataAllValuesFrom { dp, dr } => ClassExpressionView::DataAllValuesFrom {
-                property: dp.0.to_string(),
-                data_range: dr.into(),
-            },
+            ClassExpression::ObjectMinCardinality { n, ope, bce } => {
+                ClassExpressionView::ObjectMinCardinality {
+                    cardinality: *n,
+                    property: ope.into(),
+                    class_expression: Box::new((&**bce).into()),
+                }
+            }
+            ClassExpression::ObjectMaxCardinality { n, ope, bce } => {
+                ClassExpressionView::ObjectMaxCardinality {
+                    cardinality: *n,
+                    property: ope.into(),
+                    class_expression: Box::new((&**bce).into()),
+                }
+            }
+            ClassExpression::ObjectExactCardinality { n, ope, bce } => {
+                ClassExpressionView::ObjectExactCardinality {
+                    cardinality: *n,
+                    property: ope.into(),
+                    class_expression: Box::new((&**bce).into()),
+                }
+            }
+            ClassExpression::DataSomeValuesFrom { dp, dr } => {
+                ClassExpressionView::DataSomeValuesFrom {
+                    property: dp.0.to_string(),
+                    data_range: dr.into(),
+                }
+            }
+            ClassExpression::DataAllValuesFrom { dp, dr } => {
+                ClassExpressionView::DataAllValuesFrom {
+                    property: dp.0.to_string(),
+                    data_range: dr.into(),
+                }
+            }
             ClassExpression::DataHasValue { dp, l } => ClassExpressionView::DataHasValue {
                 property: dp.0.to_string(),
                 value: l.into(),
             },
-            ClassExpression::DataMinCardinality { n, dp, dr } => ClassExpressionView::DataMinCardinality {
-                cardinality: *n,
-                property: dp.0.to_string(),
-                data_range: dr.into(),
-            },
-            ClassExpression::DataMaxCardinality { n, dp, dr } => ClassExpressionView::DataMaxCardinality {
-                cardinality: *n,
-                property: dp.0.to_string(),
-                data_range: dr.into(),
-            },
-            ClassExpression::DataExactCardinality { n, dp, dr } => ClassExpressionView::DataExactCardinality {
-                cardinality: *n,
-                property: dp.0.to_string(),
-                data_range: dr.into(),
-            },
+            ClassExpression::DataMinCardinality { n, dp, dr } => {
+                ClassExpressionView::DataMinCardinality {
+                    cardinality: *n,
+                    property: dp.0.to_string(),
+                    data_range: dr.into(),
+                }
+            }
+            ClassExpression::DataMaxCardinality { n, dp, dr } => {
+                ClassExpressionView::DataMaxCardinality {
+                    cardinality: *n,
+                    property: dp.0.to_string(),
+                    data_range: dr.into(),
+                }
+            }
+            ClassExpression::DataExactCardinality { n, dp, dr } => {
+                ClassExpressionView::DataExactCardinality {
+                    cardinality: *n,
+                    property: dp.0.to_string(),
+                    data_range: dr.into(),
+                }
+            }
         }
     }
 }
@@ -223,12 +232,16 @@ impl<T: ForIRI> From<&ClassExpression<T>> for ClassExpressionView {
 impl<T: ForIRI> From<&ObjectPropertyExpression<T>> for ObjectPropertyExpressionView {
     fn from(expr: &ObjectPropertyExpression<T>) -> Self {
         match expr {
-            ObjectPropertyExpression::ObjectProperty(p) => ObjectPropertyExpressionView::ObjectProperty {
-                iri: p.0.to_string(),
-            },
-            ObjectPropertyExpression::InverseObjectProperty(p) => ObjectPropertyExpressionView::InverseObjectProperty {
-                property: p.0.to_string(),
-            },
+            ObjectPropertyExpression::ObjectProperty(p) => {
+                ObjectPropertyExpressionView::ObjectProperty {
+                    iri: p.0.to_string(),
+                }
+            }
+            ObjectPropertyExpression::InverseObjectProperty(p) => {
+                ObjectPropertyExpressionView::InverseObjectProperty {
+                    property: p.0.to_string(),
+                }
+            }
         }
     }
 }
@@ -243,7 +256,10 @@ impl<'a, T: ForIRI> From<&'a Literal<T>> for LiteralView {
                 value: literal.to_string(),
                 language: lang.to_string(),
             },
-            Literal::Datatype { literal, datatype_iri } => LiteralView::Datatype {
+            Literal::Datatype {
+                literal,
+                datatype_iri,
+            } => LiteralView::Datatype {
                 value: literal.to_string(),
                 datatype: datatype_iri.to_string(),
             },
@@ -265,23 +281,19 @@ impl<'a, T: ForIRI> From<&'a AnnotationValue<T>> for AnnotationValueView {
         match value {
             AnnotationValue::Literal(literal) => AnnotationValueView::Literal(literal.into()),
             AnnotationValue::IRI(iri) => AnnotationValueView::IRI(iri.to_string()),
-            AnnotationValue::AnonymousIndividual(id) => AnnotationValueView::AnonymousIndividual(id.to_string()),
+            AnnotationValue::AnonymousIndividual(id) => {
+                AnnotationValueView::AnonymousIndividual(id.to_string())
+            }
         }
     }
 }
 
-
-#[derive(Serialize, Eq, PartialEq, Clone, Hash, Debug)]
-#[derive(TS)]
+#[derive(Serialize, Eq, PartialEq, Clone, Hash, Debug, TS)]
 #[ts(export)]
 #[serde(tag = "type")]
 pub enum IndividualView {
-    Named {
-        iri: String,
-    },
-    Anonymous {
-        id: String,
-    }
+    Named { iri: String },
+    Anonymous { id: String },
 }
 
 impl<T: ForIRI> From<&Individual<T>> for IndividualView {
@@ -290,67 +302,90 @@ impl<T: ForIRI> From<&Individual<T>> for IndividualView {
             Individual::Named(iri) => IndividualView::Named {
                 iri: iri.0.to_string(),
             },
-            Individual::Anonymous(id) => IndividualView::Anonymous {
-                id: id.to_string(),
-            },
+            Individual::Anonymous(id) => IndividualView::Anonymous { id: id.to_string() },
         }
     }
 }
 
-#[derive(Serialize, Hash, Eq, PartialEq, Clone, Debug)]
-#[derive(TS)]
+#[derive(Serialize, Hash, Eq, PartialEq, Clone, Debug, TS)]
 #[ts(export)]
 #[serde(tag = "symbol_type")]
 pub enum OntologySymbolView {
-    CE (ClassExpressionView),
-    Role(ObjectPropertyExpressionView)
+    Class(String),
+    Role(String),
 }
 
-impl<'a, T: ForIRI> From<&OntologySymbol<'a, T>> for OntologySymbolView {
-    fn from(symbol: &OntologySymbol<T>) -> Self {
+impl<'a, T: ForIRI> From<&Symbol<T>> for OntologySymbolView {
+    fn from(symbol: &Symbol<T>) -> Self {
         match symbol {
-            OntologySymbol::CE(c) => OntologySymbolView::CE(ClassExpressionView::from(*c)),
-            OntologySymbol::Role(p) => OntologySymbolView::Role(ObjectPropertyExpressionView::from(*p))
+            Symbol::Class(c) => OntologySymbolView::Class(c.to_string()),
+            Symbol::Role(p) => OntologySymbolView::Role(p.to_string()),
         }
     }
 }
 
-#[derive(Serialize, Debug, Clone, Eq, PartialEq, Hash)]
-#[derive(TS)]
+#[derive(Serialize, Hash, Eq, PartialEq, Clone, Debug, TS)]
+#[ts(export)]
+#[serde(tag = "symbol_type")]
+pub enum OntologyTermView {
+    ClassExpression(ClassExpressionView),
+    RoleExpression(ObjectPropertyExpressionView),
+    RoleComposition(Vec<ObjectPropertyExpressionView>),
+    InverseRole(ObjectPropertyExpressionView),
+}
+
+impl<'a, T: ForIRI> From<&Term<'a, T>> for OntologyTermView {
+    fn from(term: &Term<T>) -> Self {
+        match term {
+            Term::CE(c) => OntologyTermView::ClassExpression(ClassExpressionView::from(*c)),
+            Term::Role(p) => {
+                OntologyTermView::RoleExpression(ObjectPropertyExpressionView::from(*p))
+            }
+            Term::RoleComposition(p) => OntologyTermView::RoleComposition(
+                p.into_iter()
+                    .map(|p| ObjectPropertyExpressionView::from(*p))
+                    .collect(),
+            ),
+            Term::InverseRole(p) => {
+                OntologyTermView::InverseRole(ObjectPropertyExpressionView::from(*p))
+            }
+        }
+    }
+}
+
+#[derive(Serialize, Debug, Clone, Eq, PartialEq, Hash, TS)]
 #[ts(export)]
 #[serde(tag = "sop_type", content = "content")]
 pub enum SubObjectPropertyExpressionView {
     ObjectPropertyExpression(ObjectPropertyExpressionView),
-    ObjectPropertyChain (Vec<ObjectPropertyExpressionView>),
+    ObjectPropertyChain(Vec<ObjectPropertyExpressionView>),
 }
 
 impl<T: ForIRI> From<&SubObjectPropertyExpression<T>> for SubObjectPropertyExpressionView {
     fn from(expr: &SubObjectPropertyExpression<T>) -> Self {
         match expr {
-            SubObjectPropertyExpression::ObjectPropertyExpression(ope)=> SubObjectPropertyExpressionView::ObjectPropertyExpression(ObjectPropertyExpressionView::from(ope)),
-            SubObjectPropertyExpression::ObjectPropertyChain(chain) =>
-                SubObjectPropertyExpressionView::ObjectPropertyChain(chain.iter().map(Into::into).collect())
+            SubObjectPropertyExpression::ObjectPropertyExpression(ope) => {
+                SubObjectPropertyExpressionView::ObjectPropertyExpression(
+                    ObjectPropertyExpressionView::from(ope),
+                )
+            }
+            SubObjectPropertyExpression::ObjectPropertyChain(chain) => {
+                SubObjectPropertyExpressionView::ObjectPropertyChain(
+                    chain.iter().map(Into::into).collect(),
+                )
+            }
         }
     }
 }
 
-#[derive(Serialize, Eq, PartialEq, Clone, Hash, Debug)]
-#[derive(TS)]
+#[derive(Serialize, Eq, PartialEq, Clone, Hash, Debug, TS)]
 #[ts(export)]
 #[serde(tag = "type")]
 pub enum DataRangeView {
-    Datatype {
-        iri: String,
-    },
-    DataIntersectionOf {
-        operands: Vec<DataRangeView>,
-    },
-    DataUnionOf {
-        operands: Vec<DataRangeView>,
-    },
-    DataComplementOf {
-        operand: Box<DataRangeView>,
-    },
+    Datatype { iri: String },
+    DataIntersectionOf { operands: Vec<DataRangeView> },
+    DataUnionOf { operands: Vec<DataRangeView> },
+    DataComplementOf { operand: Box<DataRangeView> },
     Unsupported,
 }
 
@@ -373,6 +408,3 @@ impl<T: ForIRI> From<&DataRange<T>> for DataRangeView {
         }
     }
 }
-
-
-

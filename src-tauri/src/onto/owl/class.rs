@@ -1,8 +1,12 @@
-use std::collections::{HashMap, HashSet};
-use horned_owl::model::{Annotation, AnnotationSubject, Class, ClassExpression, ForIRI, Individual, SubClassOf};
-use serde::{Serialize, Serializer};
+use crate::onto::serialize::{
+    AnnotationValueView, ClassExpressionView, IndividualView, OntologySymbolView,
+};
+use horned_owl::model::{
+    Annotation, AnnotationSubject, Class, ClassExpression, ForIRI, Individual, SubClassOf,
+};
 use serde::ser::SerializeStruct;
-use crate::onto::serialize::{AnnotationValueView, ClassExpressionView, IndividualView, OntologySymbolView};
+use serde::{Serialize, Serializer};
+use std::collections::{HashMap, HashSet};
 use strix_roost::ontology::visitor::AxiomVisitor;
 
 pub struct ClassDetails<T>
@@ -17,8 +21,48 @@ where
     pub disjoint_with: Vec<ClassExpressionView>,
     pub disjoint_union_of: Vec<Vec<ClassExpressionView>>,
     pub individuals: Vec<IndividualView>,
+}
 
-    pub depends_on: HashSet<OntologySymbolView>,
+impl<T: ForIRI> ClassDetails<T> {
+    pub(crate) fn merge(self, other: ClassDetails<T>) -> ClassDetails<T> {
+        ClassDetails {
+            annotations: self
+                .annotations
+                .into_iter()
+                .chain(other.annotations.into_iter())
+                .collect(),
+            subclass_of: self
+                .subclass_of
+                .into_iter()
+                .chain(other.subclass_of.into_iter())
+                .collect(),
+            equivalent_to: self
+                .equivalent_to
+                .into_iter()
+                .chain(other.equivalent_to.into_iter())
+                .collect(),
+            superclass_of: self
+                .superclass_of
+                .into_iter()
+                .chain(other.superclass_of.into_iter())
+                .collect(),
+            disjoint_with: self
+                .disjoint_with
+                .into_iter()
+                .chain(other.disjoint_with.into_iter())
+                .collect(),
+            disjoint_union_of: self
+                .disjoint_union_of
+                .into_iter()
+                .chain(other.disjoint_union_of.into_iter())
+                .collect(),
+            individuals: self
+                .individuals
+                .into_iter()
+                .chain(other.individuals.into_iter())
+                .collect(),
+        }
+    }
 }
 
 impl<T: ForIRI + Serialize> Serialize for ClassDetails<T> {
@@ -34,69 +78,122 @@ impl<T: ForIRI + Serialize> Serialize for ClassDetails<T> {
         state.serialize_field("disjoint_with", &self.disjoint_with)?;
         state.serialize_field("disjoint_union_of", &self.disjoint_union_of)?;
         state.serialize_field("individuals", &self.individuals)?;
-        state.serialize_field("depends_on", &self.depends_on)?;
         state.end()
     }
 }
 
-impl<T: ForIRI> AxiomVisitor<T> for ClassDetails<T> {
-    fn visit_subclass_of(&mut self, sco: &SubClassOf<T>, target: &T) {
+impl<'a, T: ForIRI> AxiomVisitor<'a, T, ClassDetails<T>> for ClassDetails<T> {
+    fn visit_subclass_of(sco: &'a SubClassOf<T>, target: Option<&T>) -> Option<ClassDetails<T>> {
+        let mut res = ClassDetails::default();
+        let mut changed = false;
         if let ClassExpression::Class(ref iri) = sco.sub {
-            if iri.underlying() == *target {
-                self.subclass_of.push((&sco.sup).into())
+            if Some(&iri.underlying()) == target {
+                res.subclass_of.push((&sco.sup).into());
+                changed = true;
             }
         }
         if let ClassExpression::Class(ref iri) = sco.sup {
-            if iri.underlying() == *target {
-                self.superclass_of.push((&sco.sub).into())
+            if Some(&iri.underlying()) == target {
+                res.superclass_of.push((&sco.sub).into());
+                changed = true;
             }
         }
-    }
-
-    fn visit_equivalent_classes(&mut self, cs: &Vec<ClassExpression<T>>, target: &T) {
-        let (is_contained, rest) = Self::match_class_list(target, cs);
-        if is_contained {
-            self.equivalent_to.extend(rest.into_iter().map(|c| ClassExpressionView::from(c)))
+        if changed {
+            Some(res)
+        } else {
+            None
         }
     }
 
-    fn visit_disjoint_classes(&mut self, cs: &Vec<ClassExpression<T>>, target: &T) {
+    fn visit_equivalent_classes(
+        cs: &'a Vec<ClassExpression<T>>,
+        target: Option<&'a T>,
+    ) -> Option<ClassDetails<T>> {
         let (is_contained, rest) = Self::match_class_list(target, cs);
+
         if is_contained {
-            self.disjoint_with.extend(rest.into_iter().map(|c| ClassExpressionView::from(c)))
+            let mut res = ClassDetails::default();
+            res.equivalent_to
+                .extend(rest.into_iter().map(|c| ClassExpressionView::from(c)));
+            Some(res)
+        } else {
+            None
         }
     }
 
-    fn visit_disjoint_union(&mut self, c: &Class<T>, cs: &Vec<ClassExpression<T>>, target: &T) {
+    fn visit_disjoint_classes(
+        cs: &'a Vec<ClassExpression<T>>,
+        target: Option<&'a T>,
+    ) -> Option<ClassDetails<T>> {
+        let (is_contained, rest) = Self::match_class_list(target, cs);
+        if is_contained {
+            let mut res = ClassDetails::default();
+            res.disjoint_with
+                .extend(rest.into_iter().map(|c| ClassExpressionView::from(c)));
+            Some(res)
+        } else {
+            None
+        }
+    }
+
+    fn visit_disjoint_union(
+        c: &'a Class<T>,
+        cs: &'a Vec<ClassExpression<T>>,
+        target: Option<&'a T>,
+    ) -> Option<ClassDetails<T>> {
         let Class(iri) = c;
-        if iri.underlying() == *target {
-            self.disjoint_union_of.push(cs.iter().map(|c| ClassExpressionView::from(c)).collect::<Vec<_>>())
+        if Some(&iri.underlying()) == target {
+            let mut res = ClassDetails::default();
+            res.disjoint_union_of.push(
+                cs.iter()
+                    .map(|c| ClassExpressionView::from(c))
+                    .collect::<Vec<_>>(),
+            );
+            Some(res)
+        } else {
+            None
         }
-        
     }
 
-    fn visit_class_assertion(&mut self, ce: &ClassExpression<T>, i: &Individual<T>, target: &T) {
-        if let ClassExpression::Class(iri) = ce{
-            if iri.underlying() == *target {
-                self.individuals.push(i.into())
+    fn visit_class_assertion(
+        ce: &'a ClassExpression<T>,
+        i: &'a Individual<T>,
+        target: Option<&'a T>,
+    ) -> Option<ClassDetails<T>> {
+        if let ClassExpression::Class(iri) = ce {
+            match Some(&iri.underlying()) == target {
+                true => {
+                    let mut res = ClassDetails::default();
+                    res.individuals.push(i.into());
+                    Some(res)
+                }
+                false => None,
             }
+        } else {
+            None
         }
     }
 
-    fn visit_annotation_assertion(&mut self, subject: &AnnotationSubject<T>, ann: &Annotation<T>, target: &T) {
+    fn visit_annotation_assertion(
+        subject: &'a AnnotationSubject<T>,
+        ann: &'a Annotation<T>,
+        target: Option<&'a T>,
+    ) -> Option<ClassDetails<T>> {
         match subject {
             AnnotationSubject::IRI(iri) => {
-                if iri.underlying() == *target {
+                if target == Some(&iri.underlying()) {
+                    let mut res = ClassDetails::default();
                     let ann_iri = ann.ap.underlying();
-                    let annos = self.annotations.entry(ann_iri).or_insert_with(Vec::new);
-                    annos.push((&ann.av).into())
+                    let annos = res.annotations.entry(ann_iri).or_insert_with(Vec::new);
+                    Some(res)
+                } else {
+                    None
                 }
             }
-            AnnotationSubject::AnonymousIndividual(_) => {}
+            AnnotationSubject::AnonymousIndividual(_) => None,
         }
     }
 }
-
 
 pub fn _derive_classes_from_class_expression<T: ForIRI>(ce: &ClassExpression<T>) -> Vec<T> {
     match ce {
@@ -109,31 +206,29 @@ pub fn _derive_classes_from_class_expression<T: ForIRI>(ce: &ClassExpression<T>)
             .into_iter()
             .flat_map(|ce| _derive_classes_from_class_expression(ce))
             .collect(),
-        ClassExpression::ObjectComplementOf(ce) => {
-            _derive_classes_from_class_expression(ce)
-        }
-        ClassExpression::ObjectSomeValuesFrom {ope:_, bce } => {
+        ClassExpression::ObjectComplementOf(ce) => _derive_classes_from_class_expression(ce),
+        ClassExpression::ObjectSomeValuesFrom { ope: _, bce } => {
             _derive_classes_from_class_expression(bce)
         }
-        ClassExpression::ObjectAllValuesFrom { ope:_, bce } => {
+        ClassExpression::ObjectAllValuesFrom { ope: _, bce } => {
             _derive_classes_from_class_expression(bce)
         }
-        ClassExpression::ObjectMinCardinality { n:_, ope:_, bce } => {
+        ClassExpression::ObjectMinCardinality { n: _, ope: _, bce } => {
             _derive_classes_from_class_expression(bce)
         }
-        ClassExpression::ObjectMaxCardinality { n:_, ope:_, bce } => {
+        ClassExpression::ObjectMaxCardinality { n: _, ope: _, bce } => {
             _derive_classes_from_class_expression(bce)
         }
-        ClassExpression::ObjectExactCardinality { n:_, ope:_, bce } => {
+        ClassExpression::ObjectExactCardinality { n: _, ope: _, bce } => {
             _derive_classes_from_class_expression(bce)
         }
         _ => Vec::new(),
     }
 }
 
-impl<T: ForIRI> Default for ClassDetails<T>{
+impl<T: ForIRI> Default for ClassDetails<T> {
     fn default() -> Self {
-        ClassDetails{
+        ClassDetails {
             annotations: Default::default(),
             subclass_of: vec![],
             equivalent_to: vec![],
@@ -141,8 +236,6 @@ impl<T: ForIRI> Default for ClassDetails<T>{
             disjoint_with: vec![],
             disjoint_union_of: vec![],
             individuals: vec![],
-            depends_on: HashSet::new(),
         }
     }
 }
-

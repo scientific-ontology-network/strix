@@ -1,15 +1,18 @@
-use std::collections::{HashMap};
+use crate::onto::serialize::{
+    AnnotationValueView, ClassExpressionView, DataPropertyView, DataRangeView,
+    ObjectPropertyExpressionView, OntologySymbolView, SubObjectPropertyExpressionView,
+};
 use horned_owl::model::ForIRI;
-use serde::{Serialize, Serializer};
 use serde::ser::SerializeStruct;
-use crate::onto::serialize::{AnnotationValueView, ClassExpressionView, DataPropertyView, DataRangeView, ObjectPropertyExpressionView, OntologySymbolView, SubObjectPropertyExpressionView};
+use serde::{Serialize, Serializer};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ObjectPropertyDetails<T>
 where
     T: ForIRI,
 {
-    pub annotations:  HashMap<T, Vec<AnnotationValueView>>,
+    pub annotations: HashMap<T, Vec<AnnotationValueView>>,
 
     pub subproperty_of: Vec<ObjectPropertyExpressionView>,
     pub superproperty_of: Vec<SubObjectPropertyExpressionView>,
@@ -91,9 +94,9 @@ impl<T: ForIRI + Default + Serialize> Serialize for DataPropertyDetails<T> {
     }
 }
 
-impl<'a,T: ForIRI> Default for ObjectPropertyDetails<T>{
+impl<'a, T: ForIRI> Default for ObjectPropertyDetails<T> {
     fn default() -> Self {
-        ObjectPropertyDetails{
+        ObjectPropertyDetails {
             annotations: Default::default(),
             subproperty_of: vec![],
             superproperty_of: vec![],
@@ -114,9 +117,9 @@ impl<'a,T: ForIRI> Default for ObjectPropertyDetails<T>{
     }
 }
 
-impl<'a,T: ForIRI> Default for DataPropertyDetails<T>{
+impl<'a, T: ForIRI> Default for DataPropertyDetails<T> {
     fn default() -> Self {
-        DataPropertyDetails{
+        DataPropertyDetails {
             annotations: Default::default(),
             subproperty_of: vec![],
             superproperty_of: vec![],

@@ -1,35 +1,99 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 mod onto;
 
-use std::collections::{HashMap, HashSet};
-use horned_owl::model::{ArcStr, Build};
-use strix_roost::ontology::io::load_set_ontology;
+use crate::onto::owl::hierarchy::{find_roots, OntologyView};
+use crate::onto::state::StrixState;
+use horned_owl::io::ofn::writer::AsFunctional;
+use horned_owl::model::{ArcStr, Build, IRI};
 use onto::owl::class::ClassDetails;
+use std::collections::{HashMap, HashSet};
 use std::sync::Mutex;
 use std::time::SystemTime;
-use tauri::{Manager, State};
+use strix_roost::dependency::base::DependencyBuilder;
+use strix_roost::dependency::growth::GrowthDependency;
+use strix_roost::ontology::io::load_set_ontology;
+use strix_roost::ontology::visitor::AxiomVisitor;
 use strix_roost::util::error::StrixError;
-use crate::onto::owl::hierarchy::OntologyView;
-use crate::onto::state::StrixState;
-
+use tauri::{Manager, State};
 
 #[tauri::command]
-fn load_ontology<'a>(raw_state: State<'a, Mutex<StrixState<ArcStr>>>, path: &str) -> Result<(OntologyView, HashMap<ArcStr, HashSet<ArcStr>>, HashSet<ArcStr>), StrixError>{
+fn load_ontology<'a>(
+    raw_state: State<'a, Mutex<StrixState<ArcStr>>>,
+    path: &str,
+) -> Result<
+    (
+        OntologyView,
+        HashMap<ArcStr, HashMap<ArcStr, Vec<String>>>,
+        HashSet<ArcStr>,
+    ),
+    StrixError,
+> {
     let mut state = raw_state.lock().unwrap();
     let start = SystemTime::now();
-    state.set_ontology(load_set_ontology(path));
-    println!("Ontology loaded in {:?}", start.elapsed().unwrap());
-    let hier = state.get_hierarchy();
-
-    Ok((hier, state.reduced_dependencies.clone(), state.dependency_roots.clone()))
+    match load_set_ontology(path) {
+        Ok(ontology) => {
+            state.ontology = ontology;
+            println!("Load ontology");
+            let ontology_view = OntologyView::new(&state.ontology);
+            println!("Calculate dependencies");
+            let dependencies = GrowthDependency::build_dependencies(state.ontology.i().iter());
+            let dependencies_without_cause: HashMap<ArcStr, HashSet<ArcStr>> = dependencies
+                .iter()
+                .map(|(k, vm)| {
+                    (
+                        k.underlying().clone(),
+                        vm.keys()
+                            .map(|k2| k2.underlying().clone())
+                            .collect::<HashSet<_>>(),
+                    )
+                })
+                .collect();
+            let dependency_roots: HashSet<ArcStr> = find_roots(&dependencies_without_cause);
+            let dependencies_with_string_cause: HashMap<ArcStr, HashMap<ArcStr, Vec<String>>> =
+                dependencies
+                    .iter()
+                    .map(|(k, vm)| {
+                        (
+                            k.underlying().clone(),
+                            vm.iter()
+                                .map(|(k2, causes)| {
+                                    (
+                                        k2.underlying().clone(),
+                                        causes
+                                            .iter()
+                                            .map(|c| c.as_functional().to_string())
+                                            .collect(),
+                                    )
+                                })
+                                .collect(),
+                        )
+                    })
+                    .collect();
+            println!("Done!");
+            println!("{:?}", ontology_view.is_asserted_subclass_expression_of);
+            Ok((
+                ontology_view,
+                dependencies_with_string_cause,
+                dependency_roots,
+            ))
+        }
+        Err(err) => Err(err),
+    }
 }
 
 #[tauri::command]
-fn get_class_details<'a>(state: State<'a, Mutex<StrixState<ArcStr>>>, s: &str) -> Result<ClassDetails<ArcStr>, StrixError>{
+fn get_class_details<'a>(
+    state: State<'a, Mutex<StrixState<ArcStr>>>,
+    s: &str,
+) -> Result<ClassDetails<ArcStr>, StrixError> {
     let state = state.lock().unwrap();
     let b_arc = Build::new_arc();
     let iri = b_arc.iri(s.to_string());
-    Ok(state.get_class_details(&iri.underlying()))
+    let mut class_details = ClassDetails::default();
+    for cd in ClassDetails::visit_components(state.ontology.i().iter(), Some(&iri.underlying())) {
+        class_details = class_details.merge(cd);
+    }
+    Ok(class_details)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -38,15 +102,10 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
-            app.manage::<Mutex<StrixState<ArcStr>>>(
-                Mutex::new(StrixState::default()),
-            );
+            app.manage::<Mutex<StrixState<ArcStr>>>(Mutex::new(StrixState::default()));
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![
-            load_ontology,
-            get_class_details,
-        ])
+        .invoke_handler(tauri::generate_handler![load_ontology, get_class_details,])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
