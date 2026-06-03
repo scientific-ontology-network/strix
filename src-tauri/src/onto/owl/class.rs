@@ -185,6 +185,7 @@ impl<'a, T: ForIRI> AxiomVisitor<'a, T, ClassDetails<T>> for ClassDetails<T> {
                     let mut res = ClassDetails::default();
                     let ann_iri = ann.ap.underlying();
                     let annos = res.annotations.entry(ann_iri).or_insert_with(Vec::new);
+                    annos.push(AnnotationValueView::from(&ann.av));
                     Some(res)
                 } else {
                     None

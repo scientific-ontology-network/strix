@@ -23,7 +23,6 @@ fn load_ontology<'a>(
 ) -> Result<
     (
         OntologyView,
-        HashMap<ArcStr, HashMap<ArcStr, Vec<String>>>,
         HashSet<ArcStr>,
     ),
     StrixError,
@@ -48,32 +47,11 @@ fn load_ontology<'a>(
                     )
                 })
                 .collect();
+            println!("Calculate dependency roots");
             let dependency_roots: HashSet<ArcStr> = find_roots(&dependencies_without_cause);
-            let dependencies_with_string_cause: HashMap<ArcStr, HashMap<ArcStr, Vec<String>>> =
-                dependencies
-                    .iter()
-                    .map(|(k, vm)| {
-                        (
-                            k.underlying().clone(),
-                            vm.iter()
-                                .map(|(k2, causes)| {
-                                    (
-                                        k2.underlying().clone(),
-                                        causes
-                                            .iter()
-                                            .map(|c| c.as_functional().to_string())
-                                            .collect(),
-                                    )
-                                })
-                                .collect(),
-                        )
-                    })
-                    .collect();
             println!("Done!");
-            println!("{:?}", ontology_view.is_asserted_subclass_expression_of);
             Ok((
                 ontology_view,
-                dependencies_with_string_cause,
                 dependency_roots,
             ))
         }

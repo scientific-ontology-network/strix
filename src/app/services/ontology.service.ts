@@ -42,7 +42,6 @@ export class OntologyService {
           let directSubproperties =  new Map(Object.entries(classHierarchy.is_asserted_super_object_property_of));
           // @ts-ignore
           let dependencies = new Map(Object.entries(dependencyMap));
-
           // @ts-ignore
           this.ontologyData.set({
             // @ts-ignore

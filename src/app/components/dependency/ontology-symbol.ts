@@ -16,9 +16,9 @@ import {ClassExpressionComponent} from "../class/class-expression";
     imports: [CommonModule, ObjectPropertyExpressionComponent, AnnotationValueComponent, AnnotationValueComponent, ClassExpressionComponent],
     template: `
         @switch (this.symbol.symbol_type) {
-            @case ('CE') {
+            @case ('Class') {
                 <app-class-expression
-                        [expression]="this.symbol!"
+                        [expression]="{type:'Class',iri:this.symbol!}"
                         [labelMap]="labelMap"
                         (onClassClick)="onClassClick.emit($event)"
                         (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"
@@ -26,7 +26,7 @@ import {ClassExpressionComponent} from "../class/class-expression";
             }
             @case ('Role') {
                 <app-object-property-expression
-                    [expression]="this.symbol!"
+                    [expression]="{type:'ObjectProperty',iri:this.symbol!}"
                     [labelMap]="labelMap"
                     (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"
                 />

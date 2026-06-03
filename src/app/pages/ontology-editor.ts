@@ -108,6 +108,7 @@ export class OntologyEditorComponent {
     if (!path) return;
     try {
       this.svc.load(path);
+      this.svc.ontologyData().dependencies
     } catch (e: any) {
       alert('Failed to load ontology: ' + (e?.message ?? e));
     }
