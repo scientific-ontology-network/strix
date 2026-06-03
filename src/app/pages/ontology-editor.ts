@@ -6,6 +6,8 @@ import {ClassDetailComponent} from '../components/class/class-detail';
 import {OntologyService} from '../services/ontology.service';
 import {StorageService} from '../services/storage.service';
 import {OntologySymbolView} from "../bindings/OntologySymbolView";
+import {invoke} from "@tauri-apps/api/core";
+import CompoundMap from "../util/compound-map";
 
 // @ts-ignore
 @Component({
@@ -28,6 +30,11 @@ import {OntologySymbolView} from "../bindings/OntologySymbolView";
             <nav class="flex items-center gap-2">
               <button class="btn" (click)="open()">Open…</button>
             </nav>
+            @if(svc.ontologyData().classRoots) {
+              <nav class="flex items-center gap-2">
+                <button class="btn" (click)="compare()">Compare</button>
+              </nav>
+            }
           </div>
         </div>
       </header>
@@ -130,6 +137,23 @@ export class OntologyEditorComponent {
     try {
       this.svc.load(path);
       this.svc.ontologyData().dependencies
+    } catch (e: any) {
+      alert('Failed to load ontology: ' + (e?.message ?? e));
+    }
+  }
+
+  async compare() {
+    const path = await this.storage.openTextFile();
+    if (!path) return;
+    try {
+      invoke('dependency_diff', {'path': path}).then(
+          // @ts-ignore
+          (([raw_left_not_right, raw_right_not_left]) => {
+            let left_not_right = new CompoundMap(raw_left_not_right);
+            let right_not_left = new CompoundMap(raw_right_not_left);
+            console.log(left_not_right, right_not_left)
+          })
+      )
     } catch (e: any) {
       alert('Failed to load ontology: ' + (e?.message ?? e));
     }

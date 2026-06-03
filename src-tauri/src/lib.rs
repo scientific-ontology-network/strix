@@ -84,7 +84,7 @@ fn get_class_details<'a>(
 fn dependency_diff<'a>(
     state: State<'a, Mutex<StrixState<ArcStr>>>,
     path: &str,
-) -> Result<(HashMap<OntologySymbolView, HashSet<OntologySymbolView>>,HashMap<OntologySymbolView, HashSet<OntologySymbolView>>), StrixError> {
+) -> Result<(Vec<(OntologySymbolView, HashSet<OntologySymbolView>)>,Vec<(OntologySymbolView, HashSet<OntologySymbolView>)>), StrixError> {
 
     let state = state.lock().unwrap();
     println!("Load ontology");
@@ -93,7 +93,9 @@ fn dependency_diff<'a>(
             let mut left_not_right = HashMap::new();
             let mut right_not_left = HashMap::new();
             let right_symbol_dependencies = SyntacticEmptinessDependency::build_dependencies(ontology.i().iter());
-            let right_dependencies: &HashMap<_, _> = &right_symbol_dependencies.into_iter().map(|(k, vm)| (OntologySymbolView::from(&k), vm.into_iter().map(|(k2,vn)| OntologySymbolView::from(&k)).collect())).collect();
+            let reduced_dependencies = remove_super_symbols(&right_symbol_dependencies, state.ontology.i().iter());
+            let right_dependencies: &HashMap<_, _> = &reduced_dependencies.into_iter().map(|(k, vm)| (OntologySymbolView::from(&k), vm.into_iter().map(|(k2,vn)| OntologySymbolView::from(&k)).collect())).collect();
+
             let left_dependencies = &state.dependencies;
             let all_symbols: HashSet<_> = left_dependencies.keys().chain(right_dependencies.keys()).collect();
             for a in all_symbols {
@@ -108,8 +110,8 @@ fn dependency_diff<'a>(
                 }
             }
             Ok((
-                left_not_right,
-                right_not_left,
+                left_not_right.iter().map(|(k,v)|(k.clone(), v.clone().into_iter().collect())).collect(),
+                right_not_left.iter().map(|(k,v)|(k.clone(), v.clone().into_iter().collect())).collect(),
             ))
         }
         Err(err) => Err(err),
@@ -125,7 +127,7 @@ pub fn run() {
             app.manage::<Mutex<StrixState<ArcStr>>>(Mutex::new(StrixState::default()));
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![load_ontology, get_class_details])
+        .invoke_handler(tauri::generate_handler![load_ontology, get_class_details, dependency_diff])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
