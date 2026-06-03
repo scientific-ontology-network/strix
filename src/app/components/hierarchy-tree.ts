@@ -49,20 +49,21 @@ import {AnnotationValueView} from "../bindings/AnnotationValueView";
     </ng-template>
   `,
 })
-export class HierarchyTreeComponent {
-  @Input() hierarchy!: Map<string,string[]>;
-  @Input() roots!: string[];
+export class HierarchyTreeComponent<T> {
+  @Input() hierarchy!: Map<T,T[]>;
+  @Input() roots!: T[];
   @Input() labels!: Map<string, AnnotationValueView>;
   @Input() selectedId: string | null = null;
   @Input() searchQuery = '';
-  @Output() selected = new EventEmitter<string>();
-  expanded = new Set<string>();
+  @Input() stringify! : (a:T) => string;
+  @Output() selected = new EventEmitter<T>();
+  expanded = new Set<T>();
 
   private matches = computed(() => {
     const q = (this.searchQuery || '').trim().toLowerCase();
-    if (!q) return new Set<string>();
-    const set = new Set<string>();
-    for (const c of this.roots) if (getUntaggedStringFromAnnotationValue(this.label(c)).toLowerCase().includes(q) || (c ?? '').toLowerCase().includes(q)) set.add(c);
+    if (!q) return new Set<T>();
+    const set = new Set<T>();
+    for (const c of this.roots) if (getUntaggedStringFromAnnotationValue(this.label(c)).toLowerCase().includes(q) || (this.stringify(c) ?? '').toLowerCase().includes(q)) set.add(c);
     return set;
   });
 
@@ -74,19 +75,22 @@ export class HierarchyTreeComponent {
     }
   }
 
-  protected label(id: string){
-    return this.labels.get(id) ?? id;
+  protected label(id: T){
+    let sv = this.stringify(id)
+    return this.labels.get(sv) ?? sv;
   }
 
-  protected sorter(labels: Map<string, AnnotationValueView>): (a:string,b:string) => number {
-    return (a:string,b:string) => {
-      let la = getUntaggedStringFromAnnotationValue(labels.get(a) ?? a)
-      let lb = getUntaggedStringFromAnnotationValue(labels.get(b) ?? b)
+  protected sorter(labels: Map<string, AnnotationValueView>): (a:T,b:T) => number {
+    return (a:T,b:T) => {
+      let sa = this.stringify(a);
+      let sb = this.stringify(b);
+      let la = getUntaggedStringFromAnnotationValue(labels.get(sa) ?? sa)
+      let lb = getUntaggedStringFromAnnotationValue(labels.get(sb) ?? sb)
       return (la < lb) ? -1 : (la > lb) ? 1 : 0;
     }
   }
 
-  children(id: string): string[] {
+  children(id: T): T[] {
     const out = this.hierarchy.get(id) ?? [];
     const q = (this.searchQuery || '').trim().toLowerCase();
     if (!q) return out;
@@ -95,33 +99,33 @@ export class HierarchyTreeComponent {
     return out.filter(cid => this.isVisible(cid, q));
   }
 
-  private isVisible(c: string, q: string): boolean {
+  private isVisible(c: T, q: string): boolean {
     if (!c) return false;
-    const here = getUntaggedStringFromAnnotationValue(this.label(c))?.toLowerCase().includes(q) || (c ?? '').toLowerCase().includes(q);
+    const here = getUntaggedStringFromAnnotationValue(this.label(c))?.toLowerCase().includes(q) || (this.stringify(c) ?? '').toLowerCase().includes(q);
     if (here) return true;
     const kids = this.hierarchy.get(c) ?? [];
     return kids.some(k => this.isVisible(k, q));
   }
 
-  toggle(id: string) {
+  toggle(id: T) {
     if (this.expanded.has(id)) this.expanded.delete(id); else this.expanded.add(id);
   }
 
-  select(id: string) {
+  select(id: T) {
     this.selected.emit(id);
   }
 
-  private expandAncestors(id: string) {
+  private expandAncestors(id: T) {
     // naive ancestor expansion by reverse scanning parents from id
     // Build reverse map on-the-fly
-    const parentMap = new Map<string, string[]>();
+    const parentMap = new Map<T, T[]>();
     for (const p of this.roots) {
       for (const c of (this.hierarchy.get(p) ?? [])) {
         if (!parentMap.has(c)) parentMap.set(c, []);
         parentMap.get(c)!.push(p);
       }
     }
-    const visit = (n: string) => {
+    const visit = (n: T) => {
       const parents = parentMap.get(n) ?? [];
       for (const p of parents) {
         this.expanded.add(p);
