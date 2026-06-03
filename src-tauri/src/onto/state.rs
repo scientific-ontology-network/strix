@@ -1,7 +1,7 @@
 use crate::onto::owl::class::ClassDetails;
 use crate::onto::owl::hierarchy::OntologyView;
 use crate::onto::serialize::OntologySymbolView;
-use horned_owl::model::{ClassExpression, Component, ForIRI, ObjectPropertyExpression};
+use horned_owl::model::{ArcStr, ClassExpression, Component, ForIRI, Individual, ObjectPropertyExpression};
 use horned_owl::ontology::set::SetOntology;
 use serde::de::Unexpected::Str;
 use std::collections::{HashMap, HashSet};
@@ -17,6 +17,7 @@ where
     T: ForIRI,
 {
     pub(crate) ontology: SetOntology<T>,
+    pub(crate) dependencies: HashMap<ArcStr, HashSet<ArcStr>>,
 }
 
 fn find_roots<T, S>(m: &HashMap<T, HashMap<T, S>>) -> HashSet<T>

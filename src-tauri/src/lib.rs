@@ -23,6 +23,7 @@ fn load_ontology<'a>(
 ) -> Result<
     (
         OntologyView,
+        HashMap<ArcStr, HashSet<ArcStr>>,
         HashSet<ArcStr>,
     ),
     StrixError,
@@ -47,11 +48,13 @@ fn load_ontology<'a>(
                     )
                 })
                 .collect();
+            state.dependencies = dependencies_without_cause;
             println!("Calculate dependency roots");
-            let dependency_roots: HashSet<ArcStr> = find_roots(&dependencies_without_cause);
+            let dependency_roots: HashSet<ArcStr> = find_roots(&state.dependencies);
             println!("Done!");
             Ok((
                 ontology_view,
+                state.dependencies.clone(),
                 dependency_roots,
             ))
         }
@@ -74,6 +77,42 @@ fn get_class_details<'a>(
     Ok(class_details)
 }
 
+#[tauri::command]
+fn dependency_diff<'a>(
+    state: State<'a, Mutex<StrixState<ArcStr>>>,
+    path: &str,
+) -> Result<(HashMap<ArcStr, HashSet<ArcStr>>,HashMap<ArcStr, HashSet<ArcStr>>), StrixError> {
+
+    let state = state.lock().unwrap();
+    println!("Load ontology");
+    match load_set_ontology(path) {
+        Ok(ontology) => {
+            let mut left_not_right = HashMap::new();
+            let mut right_not_left = HashMap::new();
+            let right_symbol_dependencies = GrowthDependency::build_dependencies(ontology.i().iter());
+            let right_dependencies: &HashMap<ArcStr, HashSet<ArcStr>> = &right_symbol_dependencies.into_iter().map(|(k, vm)| (k.underlying().clone(), vm.into_iter().map(|(k2,vn)| k.underlying().clone()).collect())).collect();
+            let left_dependencies = &state.dependencies;
+            let all_symbols: HashSet<_> = left_dependencies.keys().chain(right_dependencies.keys()).collect();
+            for a in all_symbols {
+                let empty = HashSet::new();
+                let in_right: HashSet<_> = right_dependencies.get(&a.clone()).unwrap_or(&empty).iter().collect();
+                let in_left: HashSet<_> = left_dependencies.get(&a.clone()).unwrap_or(&empty).iter().collect();
+                for &b in in_left.difference(&in_right) {
+                    left_not_right.entry(a.clone()).or_insert_with(HashSet::new).insert(b.clone());
+                }
+                for &b in in_right.difference(&in_left) {
+                    right_not_left.entry(a.clone()).or_insert_with(HashSet::new).insert(b.clone());
+                }
+            }
+            Ok((
+                left_not_right,
+                right_not_left,
+            ))
+        }
+        Err(err) => Err(err),
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -83,7 +122,7 @@ pub fn run() {
             app.manage::<Mutex<StrixState<ArcStr>>>(Mutex::new(StrixState::default()));
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![load_ontology, get_class_details,])
+        .invoke_handler(tauri::generate_handler![load_ontology, get_class_details])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
