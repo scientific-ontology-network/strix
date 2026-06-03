@@ -309,7 +309,7 @@ impl<T: ForIRI> From<&Individual<T>> for IndividualView {
 
 #[derive(Serialize, Hash, Eq, PartialEq, Clone, Debug, TS)]
 #[ts(export)]
-#[serde(tag = "symbol_type")]
+#[serde(tag = "symbol_type", content = "value")]
 pub enum OntologySymbolView {
     Class(String),
     Role(String),
@@ -326,7 +326,7 @@ impl<'a, T: ForIRI> From<&Symbol<T>> for OntologySymbolView {
 
 #[derive(Serialize, Hash, Eq, PartialEq, Clone, Debug, TS)]
 #[ts(export)]
-#[serde(tag = "symbol_type")]
+#[serde(tag = "term_type", content = "value")]
 pub enum OntologyTermView {
     ClassExpression(ClassExpressionView),
     RoleExpression(ObjectPropertyExpressionView),

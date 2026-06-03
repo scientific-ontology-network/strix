@@ -5,6 +5,7 @@ import {HierarchyTreeComponent} from '../components/hierarchy-tree';
 import {ClassDetailComponent} from '../components/class/class-detail';
 import {OntologyService} from '../services/ontology.service';
 import {StorageService} from '../services/storage.service';
+import {OntologySymbolView} from "../bindings/OntologySymbolView";
 
 // @ts-ignore
 @Component({
@@ -41,33 +42,39 @@ import {StorageService} from '../services/storage.service';
                      class="w-full rounded-md border-slate-300 focus:border-primary-500 focus:ring-primary-500 text-sm"/>
             </div>
             <div class="p-3 border-b border-slate-200">
+              Classes
               <app-hierarchy-tree
                   [hierarchy]="svc.ontologyData().isAssertedSuperclassOf"
                   [roots]="svc.ontologyData().classRoots"
                   [labels]="svc.ontologyData().labels"
                   [selectedId]="svc.selectedClassId()"
                   [searchQuery]="svc.searchQuery()"
+                  [stringify]="id"
                   (selected)="svc.selectClass($event)"
               />
             </div>
-            <div>
+            <div class="p-3 border-b border-slate-200">
+              Object Properties
               <app-hierarchy-tree
                   [hierarchy]="svc.ontologyData().isAssertedSuperObjectPropertyOf"
                   [roots]="svc.ontologyData().objectPropertyRoots"
                   [labels]="svc.ontologyData().labels"
                   [selectedId]="svc.selectedObjectPropertyId()"
                   [searchQuery]="svc.searchQuery()"
-                  (selected)="svc.selectClass($event)"
+                  [stringify]="id"
+                  (selected)="svc.selectObjectProperty($event)"
               />
             </div>
-            <div>
+            <div class="p-3 border-b border-slate-200">
+              Dependencies
               <app-hierarchy-tree
                   [hierarchy]="svc.ontologyData().dependencies"
                   [roots]="svc.ontologyData().dependencyRoots"
                   [labels]="svc.ontologyData().labels"
-                  [selectedId]="svc.selectedObjectPropertyId()"
+                  [selectedId]="svc.selectedClassId() || svc.selectedObjectPropertyId()"
                   [searchQuery]="svc.searchQuery()"
-                  (selected)="svc.selectClass($event)"
+                  [stringify]="getSymbolString"
+                  (selected)="selectDependencySymbol($event)"
               />
             </div>
           </aside>
@@ -102,6 +109,20 @@ export class OntologyEditorComponent {
   readonly selected = computed(() => {
     return this.svc.selectedClassId();
   });
+
+  selectDependencySymbol(s: OntologySymbolView){
+    if (s.symbol_type === "Class") {
+      this.svc.selectClass(s.value)
+    } else if (s.symbol_type === "Role") {
+      this.svc.selectObjectProperty(s.value)
+    }
+  }
+
+  getSymbolString = (s: OntologySymbolView)=> s.value;
+
+  id<S>(s:S) {
+    return s
+  }
 
   async open() {
     const path = await this.storage.openTextFile();

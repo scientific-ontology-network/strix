@@ -9,12 +9,14 @@ use onto::owl::class::ClassDetails;
 use std::collections::{HashMap, HashSet};
 use std::sync::Mutex;
 use std::time::SystemTime;
-use strix_roost::dependency::base::DependencyBuilder;
-use strix_roost::dependency::growth::GrowthDependency;
+use strix_roost::dependency::base::{DependencyBuilder, remove_super_symbols};
+use strix_roost::dependency::empty::SyntacticEmptinessDependency;
 use strix_roost::ontology::io::load_set_ontology;
 use strix_roost::ontology::visitor::AxiomVisitor;
 use strix_roost::util::error::StrixError;
+use strix_roost::util::graph::{transitive_closure, transitive_closure_with_data};
 use tauri::{Manager, State};
+use crate::onto::serialize::OntologySymbolView;
 
 #[tauri::command]
 fn load_ontology<'a>(
@@ -23,8 +25,8 @@ fn load_ontology<'a>(
 ) -> Result<
     (
         OntologyView,
-        HashMap<ArcStr, HashSet<ArcStr>>,
-        HashSet<ArcStr>,
+        HashSet<(OntologySymbolView, Vec<OntologySymbolView>)>,
+        HashSet<OntologySymbolView>,
     ),
     StrixError,
 > {
@@ -36,25 +38,26 @@ fn load_ontology<'a>(
             println!("Load ontology");
             let ontology_view = OntologyView::new(&state.ontology);
             println!("Calculate dependencies");
-            let dependencies = GrowthDependency::build_dependencies(state.ontology.i().iter());
-            let dependencies_without_cause: HashMap<ArcStr, HashSet<ArcStr>> = dependencies
+            let dependencies = SyntacticEmptinessDependency::build_dependencies(state.ontology.i().iter());
+            let reduced_dependencies = remove_super_symbols(&dependencies, state.ontology.i().iter());
+            let dependencies_views: HashMap<OntologySymbolView, HashSet<OntologySymbolView>> = reduced_dependencies
                 .iter()
                 .map(|(k, vm)| {
                     (
-                        k.underlying().clone(),
-                        vm.keys()
-                            .map(|k2| k2.underlying().clone())
-                            .collect::<HashSet<_>>(),
+                        OntologySymbolView::from(k),
+                        vm.keys().map(|k2|OntologySymbolView::from(k2)).collect()
                     )
                 })
                 .collect();
-            state.dependencies = dependencies_without_cause;
+
+            state.dependencies = dependencies_views;
             println!("Calculate dependency roots");
-            let dependency_roots: HashSet<ArcStr> = find_roots(&state.dependencies);
+            let dependency_roots: HashSet<OntologySymbolView> = find_roots(&state.dependencies);
+            let deps = state.dependencies.iter().map(|(k,v)|(k.clone(), v.clone().into_iter().collect())).collect();
             println!("Done!");
             Ok((
                 ontology_view,
-                state.dependencies.clone(),
+                deps,
                 dependency_roots,
             ))
         }
@@ -81,7 +84,7 @@ fn get_class_details<'a>(
 fn dependency_diff<'a>(
     state: State<'a, Mutex<StrixState<ArcStr>>>,
     path: &str,
-) -> Result<(HashMap<ArcStr, HashSet<ArcStr>>,HashMap<ArcStr, HashSet<ArcStr>>), StrixError> {
+) -> Result<(HashMap<OntologySymbolView, HashSet<OntologySymbolView>>,HashMap<OntologySymbolView, HashSet<OntologySymbolView>>), StrixError> {
 
     let state = state.lock().unwrap();
     println!("Load ontology");
@@ -89,8 +92,8 @@ fn dependency_diff<'a>(
         Ok(ontology) => {
             let mut left_not_right = HashMap::new();
             let mut right_not_left = HashMap::new();
-            let right_symbol_dependencies = GrowthDependency::build_dependencies(ontology.i().iter());
-            let right_dependencies: &HashMap<ArcStr, HashSet<ArcStr>> = &right_symbol_dependencies.into_iter().map(|(k, vm)| (k.underlying().clone(), vm.into_iter().map(|(k2,vn)| k.underlying().clone()).collect())).collect();
+            let right_symbol_dependencies = SyntacticEmptinessDependency::build_dependencies(ontology.i().iter());
+            let right_dependencies: &HashMap<_, _> = &right_symbol_dependencies.into_iter().map(|(k, vm)| (OntologySymbolView::from(&k), vm.into_iter().map(|(k2,vn)| OntologySymbolView::from(&k)).collect())).collect();
             let left_dependencies = &state.dependencies;
             let all_symbols: HashSet<_> = left_dependencies.keys().chain(right_dependencies.keys()).collect();
             for a in all_symbols {

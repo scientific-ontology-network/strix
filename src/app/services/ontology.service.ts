@@ -2,7 +2,8 @@ import { Injectable, signal, computed } from '@angular/core';
 import {invoke} from "@tauri-apps/api/core";
 import {toArray} from "rxjs";
 import {AnnotationValueView} from "../bindings/AnnotationValueView";
-
+import {OntologySymbolView} from "../bindings/OntologySymbolView";
+import CompoundMap from "../util/compound-map"
 export interface OntologyData {
   labels: Map<string, AnnotationValueView>;
   classRoots: string[];
@@ -11,8 +12,8 @@ export interface OntologyData {
   objectPropertyRoots: string[];
   isAssertedSuperObjectPropertyOf: Map<string, string[]>;
 
-  dependencies: Map<string, string[]>;
-  dependencyRoots: string[];
+  dependencies: Map<OntologySymbolView, OntologySymbolView[]>;
+  dependencyRoots: OntologySymbolView[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -31,9 +32,10 @@ export class OntologyService {
   readonly searchQuery = signal('');
 
   load(path: string) {
-      invoke('load_ontology', {path: path}).then(
+      invoke('load_ontology', {'path': path}).then(
         // @ts-ignore
         (([classHierarchy, dependencyMap, dependencyRoots]) => {
+
           // @ts-ignore
           let labelMap = new Map(Object.entries(classHierarchy.labels));
           // @ts-ignore
@@ -41,7 +43,7 @@ export class OntologyService {
           // @ts-ignore
           let directSubproperties =  new Map(Object.entries(classHierarchy.is_asserted_super_object_property_of));
           // @ts-ignore
-          let dependencies = new Map(Object.entries(dependencyMap));
+          let dependencies = new CompoundMap(dependencyMap);
           // @ts-ignore
           this.ontologyData.set({
             // @ts-ignore
@@ -59,7 +61,6 @@ export class OntologyService {
               //@ts-ignore
               dependencyRoots: dependencyRoots
           });
-          // reset selection
           // @ts-ignore
           const first = classHierarchy.class_roots[0] ?? null;
           this.selectedClassId.set(first);

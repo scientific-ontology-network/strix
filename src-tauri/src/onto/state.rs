@@ -17,7 +17,7 @@ where
     T: ForIRI,
 {
     pub(crate) ontology: SetOntology<T>,
-    pub(crate) dependencies: HashMap<ArcStr, HashSet<ArcStr>>,
+    pub(crate) dependencies: HashMap<OntologySymbolView, HashSet<OntologySymbolView>>,
 }
 
 fn find_roots<T, S>(m: &HashMap<T, HashMap<T, S>>) -> HashSet<T>

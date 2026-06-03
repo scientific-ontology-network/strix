@@ -116,13 +116,13 @@ import {ObjectPropertyExpressionComponent} from "../property/object_property";
                       @switch (dependency.symbol_type) {
                         @case('Class') {
                             <app-class-expression class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm"
-                                                   [expression]="{type:'Class',iri:dependency}"
+                                                   [expression]="{'type':'Class','iri':dependency.value}"
                                                    [labelMap]="ontologyData().labels"
                                                    (onClassClick)="onClassClick.emit($event)"
                                                    (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/>
                         } @case('Role') {
                             <app-object-property-expression class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm"
-                                                            [expression]="{type:'ObjectProperty',iri:dependency}" 
+                                                            [expression]="{'type':'ObjectProperty','iri':dependency.value}" 
                                                             [labelMap]="ontologyData().labels"
                                                             (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/>
                         }
@@ -166,8 +166,12 @@ export class ClassDetailComponent implements OnChanges{
       this.loading.set(true);
       invoke('get_class_details', {s:iri})
           .then(result => {
-            this.classDetails.set(new ClassDetailsService(result));
-            console.log(this.classDetails());
+            let cd = new ClassDetailsService(result);
+            console.log(this.ontologyData().dependencies)
+            console.log(iri!);
+            cd.dependsOn = this.ontologyData().dependencies.get({'symbol_type':"Class", 'value':iri!}) || []
+            console.log(this.ontologyData().dependencies.get({'symbol_type':"Class", 'value':iri!}))
+            this.classDetails.set(cd);
             this.loading.set(false);
           });
     }

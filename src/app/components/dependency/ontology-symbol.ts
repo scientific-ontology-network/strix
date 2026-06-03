@@ -18,7 +18,7 @@ import {ClassExpressionComponent} from "../class/class-expression";
         @switch (this.symbol.symbol_type) {
             @case ('Class') {
                 <app-class-expression
-                        [expression]="{type:'Class',iri:this.symbol!}"
+                        [expression]="{'type':'Class','iri':this.symbol.value!}"
                         [labelMap]="labelMap"
                         (onClassClick)="onClassClick.emit($event)"
                         (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"
@@ -26,7 +26,7 @@ import {ClassExpressionComponent} from "../class/class-expression";
             }
             @case ('Role') {
                 <app-object-property-expression
-                    [expression]="{type:'ObjectProperty',iri:this.symbol!}"
+                    [expression]="{'type':'ObjectProperty','iri':this.symbol.value!}"
                     [labelMap]="labelMap"
                     (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"
                 />
