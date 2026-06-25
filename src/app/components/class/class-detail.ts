@@ -19,12 +19,15 @@ import {v4 as uuidv4} from 'uuid';
 import {OntologySymbolView} from "../../bindings/OntologySymbolView";
 import {AnnotationValueComponent} from "../annotation/annotation-value";
 import {ObjectPropertyExpressionComponent} from "../property/object_property";
+import {CdkAccordionModule} from '@angular/cdk/accordion';
+import { OntologyEditorComponent } from '../../pages/ontology-editor';
+import CompoundMap from '../../util/compound-map';
 
 
 @Component({
   selector: 'app-class-detail',
   standalone: true,
-  imports: [CommonModule, ClassExpressionComponent, ObjectPropertyExpressionComponent, AnnotationValueComponent, ObjectPropertyExpressionComponent],
+  imports: [CommonModule, ClassExpressionComponent, ObjectPropertyExpressionComponent, AnnotationValueComponent, ObjectPropertyExpressionComponent, CdkAccordionModule],
   preserveWhitespaces: true,
   template: `
     <div class="p-6">
@@ -74,9 +77,8 @@ import {ObjectPropertyExpressionComponent} from "../property/object_property";
                 }
               }
             </div>
-          </div>
-          <div>
-            <h3 class="text-sm font-medium text-slate-600 uppercase tracking-wider">Metadata</h3>
+            <div>
+            <h3 class="text-sm font-medium text-slate-600 uppercase tracking-wider">Axioms</h3>
             <div class="mt-2 rounded-md border border-slate-200">
               @if(this.classDetails()?.equivalentTo?.length){
                 <div class="border-t px-3 py-2 text-sm"><span
@@ -106,6 +108,15 @@ import {ObjectPropertyExpressionComponent} from "../property/object_property";
                   </span>
                 </div>
               }
+              
+            </div>
+
+          </div>
+
+          </div>
+
+                                                <!-- this is where the dependencies should go -->
+          <div class="mt-5 grid grid-cols-1 gap-6">
               <div class="border-t px-3 py-2 text-sm" *ngIf="this.classDetails()?.dependsOn?.length"><span
                   class="text-slate-500">Depends On:</span>
                 <span class="ml-2 inline-flex gap-1 flex-wrap">
@@ -131,8 +142,217 @@ import {ObjectPropertyExpressionComponent} from "../property/object_property";
                   }</ul>
                 </span>
               </div>
-            </div>
-          </div>
+                    <cdk-accordion class="accordion">
+                        <cdk-accordion-item #accordionItem="cdkAccordionItem">
+                          <div class="mt-2 rounded-md border border-slate-200">
+                            
+                            @let hasAddedDeps = this.left_not_right().get({symbol_type: 'Class', value: iri});
+
+                           <div class="px-3 py-2">
+                            <b [class.text-slate-500]="!hasAddedDeps">{{ "Added Dependencies"}}</b>
+                            <span [class.text-slate-500]="!hasAddedDeps" class="toggle" (click)="accordionItem.toggle()">
+                              &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Click to {{ accordionItem.expanded ? 'close' : 'open' }}
+                            </span>
+                          </div>
+
+                            <!-- this is where the other classes that will be compared should be -->
+                          <div
+                            class="example-accordion-item-body"
+                            role="region"
+                            [style.display]="accordionItem.expanded ? '' : 'none'">
+
+                              <div class="px-3 py-2">
+                                
+                                      <cdk-accordion class="class-accordion">
+
+                                        @if(hasAddedDeps){
+
+                                              @for (dep of hasAddedDeps; track $index) {
+
+                                                 
+                                                 <!--{{depDetails(dep.value)}}
+                                                 {{console.log("CoolData:" + this.dependencyDetails()?.definition)}}-->
+
+                                                 
+                                                <cdk-accordion-item #ClassAccordionItem ="cdkAccordionItem" (opened)="depDetails(dep.value)">
+                                                  <div class="mt-2 rounded-md border border-slate-200">
+                                                    
+                                                  <div class="px-3 py-2">
+                                                    <span class="toggle" (click)="ClassAccordionItem.toggle()">
+                                                      {{ ClassAccordionItem.expanded ? '∧' : '∨' }}
+                                                    </span>
+                                                    <b>  
+                                                    <app-class-expression [expression]="{'type':'Class','iri':dep.value}" [labelMap]="ontologyData().labels"
+                                                                          (onClassClick)="onClassClick.emit($event)"
+                                                                          (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/>                           
+                                           
+                                                    </b>
+                                                    
+                                                  </div>
+
+                                                  
+                                                  <div
+                                                    class="example-accordion-item-body"
+                                                    role="region"
+                                                    [style.display]="ClassAccordionItem.expanded ? '' : 'none'">
+
+                                                    <div class="px-3 py-2">
+                                                    {{"Definition: "  + this.dependencyDetails()?.definition}}
+                                                    </div>
+
+                                                    <div class="px-3 py-2">
+                                                    {{"Axioms: "}} <br>
+                                                    @for (p of this.dependencyDetails()?.superclasses; track $index) {
+                                                      {{"SubclassOf "}}
+                                                    <app-class-expression [expression]="p" [labelMap]="ontologyData().labels"
+                                                     /> <br>
+                                                    }
+
+                                                    @for (p of this.dependencyDetails()?.equivalentTo; track $index) {
+                                                      {{"EquivalentTo "}}
+                                                    <app-class-expression [expression]="p" [labelMap]="ontologyData().labels"
+                                                     /> <br>
+                                                    }
+                                                    </div>
+                                                    
+                                                  </div>
+
+                                                  </div>
+                                                </cdk-accordion-item>
+
+                                                
+                                              } 
+                                        } @else if (this.left_not_right().size == 0) {
+                                          <span class="text-gray-500">
+                                           Upload a different version of your ontology to view dependency differences.
+                                        </span>
+
+                                        } @else {
+                                          <span class="text-gray-500">
+                                           There are no added dependencies.
+                                        </span>
+                                        }
+
+                                        </cdk-accordion>
+
+                                        
+                              
+                            </div>
+                          </div>
+
+                          </div>
+                        </cdk-accordion-item>
+
+                      
+                        <cdk-accordion-item #accordionItem2="cdkAccordionItem">
+                          <div class="mt-2 rounded-md border border-slate-200">
+                            
+                            @let hasDeletedDeps = this.right_not_left().get({symbol_type: 'Class', value: iri});
+
+                           <div class="px-3 py-2">
+                            <b [class.text-slate-500]="!hasDeletedDeps">{{ "Deleted Dependencies"}}</b>
+                            <span [class.text-slate-500]="!hasDeletedDeps" class="toggle" (click)="accordionItem2.toggle()">
+                              &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&ensp;Click to {{ accordionItem2.expanded ? 'close' : 'open' }}
+                            </span>
+                          </div>
+
+                            <!-- this is where the other classes that will be compared should be -->
+                          <div
+                            class="example-accordion-item-body"
+                            role="region"
+                            [style.display]="accordionItem2.expanded ? '' : 'none'">
+
+                              <div class="px-3 py-2">
+                                
+                                      <cdk-accordion class="class-accordion">
+
+                                        @if(hasDeletedDeps){
+
+                                              @for (dep of hasDeletedDeps; track $index) {
+
+                                                 
+                                                 <!--{{depDetails(dep.value)}}
+                                                 {{console.log("CoolData:" + this.dependencyDetails()?.definition)}}-->
+
+                                                 
+                                                <cdk-accordion-item #ClassAccordionItem ="cdkAccordionItem" (opened)="depDetails(dep.value)">
+                                                  <div class="mt-2 rounded-md border border-slate-200">
+                                                    
+                                                  <div class="px-3 py-2">
+                                                    <span class="toggle" (click)="ClassAccordionItem.toggle()">
+                                                      {{ ClassAccordionItem.expanded ? '∧' : '∨' }}
+                                                    </span>
+                                                    <b>  
+                                                    <app-class-expression [expression]="{'type':'Class','iri':dep.value}" [labelMap]="ontologyData().labels"
+                                                                          (onClassClick)="onClassClick.emit($event)"
+                                                                          (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/>                           
+                                           
+                                                    </b>
+                                                    
+                                                  </div>
+
+                                                  
+                                                  <div
+                                                    class="example-accordion-item-body"
+                                                    role="region"
+                                                    [style.display]="ClassAccordionItem.expanded ? '' : 'none'">
+
+                                                    <div class="px-3 py-2">
+                                                    {{"Definition: "  + this.dependencyDetails()?.definition}}
+                                                    </div>
+
+                                                    <div class="px-3 py-2">
+                                                    {{"Axioms: "}} <br>
+                                                    @for (p of this.dependencyDetails()?.superclasses; track $index) {
+                                                      {{"SubclassOf "}}
+                                                    <app-class-expression [expression]="p" [labelMap]="ontologyData().labels"
+                                                     /> <br>
+                                                    }
+
+                                                    @for (p of this.dependencyDetails()?.equivalentTo; track $index) {
+                                                      {{"EquivalentTo "}}
+                                                    <app-class-expression [expression]="p" [labelMap]="ontologyData().labels"
+                                                     /> <br>
+                                                    }
+                                                    </div>
+                                                    
+                                                  </div>
+
+                                                  </div>
+                                                </cdk-accordion-item>
+
+                                                
+                                              } 
+                                        } @else if (this.left_not_right().size == 0) {
+                                          <span class="text-gray-500">
+                                           Upload a different version of your ontology to view dependency differences.
+                                        </span>
+
+                                        } @else {
+                                          <span class="text-gray-500">
+                                           There are no deleted dependencies.
+                                        </span>
+                                        }
+
+                                        </cdk-accordion>
+
+                                        
+                              
+                            </div>
+                          </div>
+
+                          </div>
+                        </cdk-accordion-item>
+
+
+                      </cdk-accordion>
+
+          
+                        
+                      
+            </div>       
+
+          
         </div>
       }
       <ng-template #empty>
@@ -151,12 +371,15 @@ import {ObjectPropertyExpressionComponent} from "../property/object_property";
 export class ClassDetailComponent implements OnChanges{
   @Input() iri!: string;
   @Input() ontologyData!: Signal<OntologyData>;
+  @Input() left_not_right!: Signal<CompoundMap<any, any>>
+  @Input() right_not_left!: Signal<CompoundMap<any, any>>
   @Output() onClassClick: EventEmitter<string> = new EventEmitter();
   @Output() onObjectPropertyClick: EventEmitter<string> = new EventEmitter();
 
   protected readonly classDetails = signal<ClassDetailsService | null>(null);
   protected readonly loading = signal(false);
   private currentIri = signal<string | null>(null);
+
 
   constructor() {}
 
@@ -176,6 +399,16 @@ export class ClassDetailComponent implements OnChanges{
           });
     }
   });
+
+protected readonly dependencyDetails = signal<ClassDetailsService | null>(null);
+depDetails(dep: string){
+    invoke('get_class_details', { s: dep })
+      .then(result => {
+        const depDet = new ClassDetailsService(result);
+            this.dependencyDetails.set(depDet);
+      });
+}
+
 
   ngOnDestroy() {
     this.effectRef.destroy();

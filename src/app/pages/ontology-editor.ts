@@ -1,4 +1,4 @@
-import {Component, computed, inject} from '@angular/core';
+import {Component, computed, inject, signal, Signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {HierarchyTreeComponent} from '../components/hierarchy-tree';
@@ -90,6 +90,8 @@ import CompoundMap from "../util/compound-map";
               <app-class-detail
                   [iri]="selected()!"
                   [ontologyData]="svc.ontologyData"
+                  [left_not_right]="this.left_not_right"
+                  [right_not_left]="this.right_not_left"
                   (onClassClick)="svc.selectClass($event)"
                   (onObjectPropertyClick)="svc.selectObjectProperty($event)"
               />
@@ -112,6 +114,9 @@ import CompoundMap from "../util/compound-map";
 export class OntologyEditorComponent {
   readonly svc = inject(OntologyService);
   readonly storage = inject(StorageService);
+
+  left_not_right = signal<CompoundMap<unknown, unknown>>(new CompoundMap());
+  right_not_left = signal<CompoundMap<unknown, unknown>>(new CompoundMap());
 
   readonly selected = computed(() => {
     return this.svc.selectedClassId();
@@ -142,6 +147,7 @@ export class OntologyEditorComponent {
     }
   }
 
+
   async compare() {
     const path = await this.storage.openTextFile();
     if (!path) return;
@@ -149,9 +155,13 @@ export class OntologyEditorComponent {
       invoke('dependency_diff', {'path': path}).then(
           // @ts-ignore
           (([raw_left_not_right, raw_right_not_left]) => {
-            let left_not_right = new CompoundMap(raw_left_not_right);
+            /*let left_not_right = new CompoundMap(raw_left_not_right);
             let right_not_left = new CompoundMap(raw_right_not_left);
-            console.log(left_not_right, right_not_left)
+            console.log(left_not_right, right_not_left)*/
+
+            this.left_not_right.set(new CompoundMap(raw_left_not_right));
+            this.right_not_left.set(new CompoundMap(raw_right_not_left));
+            console.log("dep: " + new CompoundMap(raw_left_not_right), new CompoundMap(raw_right_not_left))
           })
       )
     } catch (e: any) {
