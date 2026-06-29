@@ -1,4 +1,4 @@
-use horned_owl::model::*;
+use horned_owl::model::{ClassExpression, ObjectProperty, ObjectPropertyExpression, Literal, ForIRI, AnnotationValue, Individual, Annotation, SubObjectPropertyExpression, DataRange, Class};
 use serde::Serialize;
 use strix_roost::dependency::symbol::{Symbol, Term};
 use ts_rs::TS;
@@ -331,7 +331,9 @@ pub enum OntologyTermView {
     ClassExpression(ClassExpressionView),
     RoleExpression(ObjectPropertyExpressionView),
     RoleComposition(Vec<ObjectPropertyExpressionView>),
-    InverseRole(ObjectPropertyExpressionView),
+    InverseRole(String),
+    Class(String),
+    ObjectProperty(String)
 }
 
 impl<'a, T: ForIRI> From<&Term<'a, T>> for OntologyTermView {
@@ -346,9 +348,11 @@ impl<'a, T: ForIRI> From<&Term<'a, T>> for OntologyTermView {
                     .map(|p| ObjectPropertyExpressionView::from(*p))
                     .collect(),
             ),
-            Term::InverseRole(p) => {
-                OntologyTermView::InverseRole(ObjectPropertyExpressionView::from(*p))
+            Term::InverseRole(ObjectProperty(iri)) => {
+                OntologyTermView::InverseRole(iri.to_string())
             }
+            Term::Class(Class(iri)) => OntologyTermView::Class(iri.to_string()),
+            Term::ObjectProperty(ObjectProperty(iri)) => OntologyTermView::ObjectProperty(iri.to_string()),
         }
     }
 }

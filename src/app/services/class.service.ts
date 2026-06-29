@@ -1,7 +1,7 @@
 import {ClassExpressionView} from "../bindings/ClassExpressionView";
 import {OntologySymbolView} from "../bindings/OntologySymbolView";
 import {LiteralView} from "../bindings/LiteralView";
-
+import {getEnglishLiteral} from "../util/literal"
 export class ClassDetailsService {
     iri: string | null = null;
     annotations: Map<string, LiteralView[]> = new Map();
@@ -32,11 +32,12 @@ export class ClassDetailsService {
         // @ts-ignore
         this.individuals = result.individuals
         // @ts-ignore
-        this.definition = result.definition
+        this.definition = getEnglishLiteral(result.annotations["http://www.w3.org/2004/02/skos/core#definition"] || result.annotations["http://purl.obolibrary.org/obo/IAO_0000115"]) || "No definition found"
         // @ts-ignore
         this.label = result.label
         // @ts-ignore
         this.dependsOn = result.depends_on
+        console.log(this)
     }
 
 }

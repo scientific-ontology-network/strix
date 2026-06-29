@@ -390,10 +390,7 @@ export class ClassDetailComponent implements OnChanges{
       invoke('get_class_details', {s:iri})
           .then(result => {
             let cd = new ClassDetailsService(result);
-            console.log(this.ontologyData().dependencies)
-            console.log(iri!);
             cd.dependsOn = this.ontologyData().dependencies.get({'symbol_type':"Class", 'value':iri!}) || []
-            console.log(this.ontologyData().dependencies.get({'symbol_type':"Class", 'value':iri!}))
             this.classDetails.set(cd);
             this.loading.set(false);
           });
