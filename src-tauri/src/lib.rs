@@ -94,7 +94,7 @@ fn dependency_diff<'a>(
             let mut right_not_left = HashMap::new();
             let right_symbol_dependencies = SyntacticEmptinessDependency::build_dependencies(ontology.i().iter());
             let reduced_dependencies = remove_super_symbols(&right_symbol_dependencies, state.ontology.i().iter());
-            let right_dependencies: &HashMap<_, _> = &reduced_dependencies.into_iter().map(|(k, vm)| (OntologySymbolView::from(&k), vm.into_iter().map(|(k2,vn)| OntologySymbolView::from(&k)).collect())).collect();
+            let right_dependencies: &HashMap<_, _> = &reduced_dependencies.into_iter().map(|(k, vm)| (OntologySymbolView::from(&k), vm.into_iter().map(|(k2,vn)| OntologySymbolView::from(&k2)).collect())).collect();
 
             let left_dependencies = &state.dependencies;
             let all_symbols: HashSet<_> = left_dependencies.keys().chain(right_dependencies.keys()).collect();
