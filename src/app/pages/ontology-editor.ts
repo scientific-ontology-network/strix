@@ -28,11 +28,11 @@ import CompoundMap from "../util/compound-map";
               </div>
             </div>
             <nav class="flex items-center gap-2">
-              <button class="btn" (click)="open()">Open…</button>
+              <button class="px-3 py-1.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-sm shadow-sm transition" (click)="open()">Open…</button>
             </nav>
             @if(svc.ontologyData().classRoots) {
               <nav class="flex items-center gap-2">
-                <button class="btn" (click)="compare()">Compare</button>
+                <button class="px-3 py-1.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-sm shadow-sm transition" (click)="compare()">Compare</button>
               </nav>
             }
           </div>
@@ -104,9 +104,7 @@ import CompoundMap from "../util/compound-map";
       </main>
     </div>
   `,
-  styles: [
-    `.btn{ @apply px-3 py-1.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-sm shadow-sm transition; }
-     .btn-primary{ @apply bg-primary-600 text-white border-primary-600 hover:bg-primary-700; }
+  styles: [`
      :host{ display:block }
     `,
   ],
