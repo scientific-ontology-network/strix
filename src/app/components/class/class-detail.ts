@@ -20,6 +20,7 @@ import {OntologySymbolView} from "../../bindings/OntologySymbolView";
 import {AnnotationValueComponent} from "../annotation/annotation-value";
 import {ObjectPropertyExpressionComponent} from "../property/object_property";
 import {CdkAccordionModule} from '@angular/cdk/accordion';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 import { OntologyEditorComponent } from '../../pages/ontology-editor';
 import CompoundMap from '../../util/compound-map';
 
@@ -27,7 +28,7 @@ import CompoundMap from '../../util/compound-map';
 @Component({
   selector: 'app-class-detail',
   standalone: true,
-  imports: [CommonModule, ClassExpressionComponent, ObjectPropertyExpressionComponent, AnnotationValueComponent, ObjectPropertyExpressionComponent, CdkAccordionModule],
+  imports: [CommonModule, ClassExpressionComponent, ObjectPropertyExpressionComponent, AnnotationValueComponent, ObjectPropertyExpressionComponent, CdkAccordionModule, MatSlideToggleModule],
   preserveWhitespaces: true,
   template: `
     <div class="p-6">
@@ -115,33 +116,108 @@ import CompoundMap from '../../util/compound-map';
 
           </div>
 
-                                                <!-- this is where the dependencies should go -->
-          <div class="mt-5 grid grid-cols-1 gap-6">
-              <div class="border-t px-3 py-2 text-sm" *ngIf="this.classDetails()?.dependsOn?.length"><span
-                  class="text-slate-500">Depends On:</span>
-                <span class="ml-2 inline-flex gap-1 flex-wrap">
-                  <ul class="flex flex-wrap gap-2"
-                  >
-                  @for (dependency of this.classDetails()?.dependsOn; track $index){
-                    <li>
+                                               
+         <!-- this is where the dependencies should go -->
+       
+        <div class="mt-5 grid grid-cols-1 gap-6">
+          <div class="border-t px-3 py-2 text-sm" *ngIf="this.classDetails()?.dependsOn?.length"><span
+                  class="text-slate-500">Depends On:</span> <br>
+
+                  @let depDiffMissing = (this.left_not_right().size == 0 && this.right_not_left().size == 0);
+                <mat-slide-toggle [disabled]="depDiffMissing" (change)="onDepChange()">
+                @if(depDiffMissing){
+                   <span class="text-gray-500">
+                                           Upload a different version of your ontology to view dependency differences.
+                                        </span>
+
+                } @else {
+                  Show dependency differences
+                }
+                </mat-slide-toggle>
+                @if(this.displayAllDeps){
+                <cdk-accordion class="accordion">
+
+                @for (dependency of this.classDetails()?.dependsOn; track $index){
+                    
+                      <cdk-accordion-item #ClassAccordionItem ="cdkAccordionItem" (opened)="depDetails(dependency.value)">
                       @switch (dependency.symbol_type) {
                         @case('Class') {
-                            <app-class-expression class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm"
-                                                   [expression]="{'type':'Class','iri':dependency.value}"
-                                                   [labelMap]="ontologyData().labels"
-                                                   (onClassClick)="onClassClick.emit($event)"
-                                                   (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/>
+
+                           <div class="mt-2 rounded-md border border-slate-200">
+                                                    
+                                                  <div class="px-3 py-2">
+                                                    <span class="toggle" (click)="ClassAccordionItem.toggle()">
+                                                      {{ ClassAccordionItem.expanded ? '∧' : '∨' }}
+                                                    </span>
+                                                    <b>  
+                                                    <app-class-expression [expression]="{'type':'Class','iri':dependency.value}" [labelMap]="ontologyData().labels"
+                                                                          (onClassClick)="onClassClick.emit($event)"/>                           
+                                           
+                                                    </b>
+                                                    
+                                                  </div>
+                                                  <div
+                                                    class="example-accordion-item-body"
+                                                    role="region"
+                                                    [style.display]="ClassAccordionItem.expanded ? '' : 'none'">
+
+                                                    <div class="px-3 py-2">
+                                                    {{"Definition: "  + this.dependencyDetails()?.definition}}
+                                                    </div>
+
+                                                    <div class="px-3 py-2">
+                                                    {{"Axioms: "}} <br>
+                                                    @for (p of this.dependencyDetails()?.superclasses; track $index) {
+                                                      {{"SubclassOf "}}
+                                                    <app-class-expression [expression]="p" [labelMap]="ontologyData().labels"
+                                                     /> <br>
+                                                    }
+
+                                                    @for (p of this.dependencyDetails()?.equivalentTo; track $index) {
+                                                      {{"EquivalentTo "}}
+                                                    <app-class-expression [expression]="p" [labelMap]="ontologyData().labels"
+                                                     /> <br>
+                                                    }
+                                                    </div>
+                                                    
+                                                  </div>
+                          </div>
+
                         } @case('Role') {
-                            <app-object-property-expression class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm"
-                                                            [expression]="{'type':'ObjectProperty','iri':dependency.value}" 
-                                                            [labelMap]="ontologyData().labels"
-                                                            (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/>
+
+                          <div class="mt-2 rounded-md border border-slate-200">
+                                                    
+                                                  <div class="px-3 py-2">
+                                                    <span class="toggle" (click)="ClassAccordionItem.toggle()">
+                                                      {{ ClassAccordionItem.expanded ? '∧' : '∨' }}
+                                                    </span>
+                                                    <b>  
+                                                    <app-object-property-expression [expression]="{'type':'ObjectProperty','iri':dependency.value}" [labelMap]="ontologyData().labels"
+                                                                          (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/>                           
+                                           
+                                                    </b>
+                                                    
+                                                  </div>
+
+                                                  <div
+                                                    class="example-accordion-item-body"
+                                                    role="region"
+                                                    [style.display]="ClassAccordionItem.expanded ? '' : 'none'">
+                                                    <div class="px-3 py-2"> {{"Details on object properties are not currently available."}} </div>
+                                                  </div>
+                                                  
+                          </div>
                         }
+
+                        
                       }
-                    </li>
-                  }</ul>
-                </span>
-              </div>
+                      </cdk-accordion-item>
+
+                }
+
+                </cdk-accordion>
+                } @else {
+         
                     <cdk-accordion class="accordion">
                         <cdk-accordion-item #accordionItem="cdkAccordionItem">
                           <div class="mt-2 rounded-md border border-slate-200">
@@ -151,7 +227,7 @@ import CompoundMap from '../../util/compound-map';
                            <div class="px-3 py-2">
                             <b [class.text-slate-500]="!hasAddedDeps">{{ "Added Dependencies"}}</b>
                             <span [class.text-slate-500]="!hasAddedDeps" class="toggle" (click)="accordionItem.toggle()">
-                              &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Click to {{ accordionItem.expanded ? 'close' : 'open' }}
+                              &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Click to {{ accordionItem.expanded ? 'close' : 'open' }}
                             </span>
                           </div>
 
@@ -222,12 +298,7 @@ import CompoundMap from '../../util/compound-map';
 
                                                 
                                               } 
-                                        } @else if (this.left_not_right().size == 0) {
-                                          <span class="text-gray-500">
-                                           Upload a different version of your ontology to view dependency differences.
-                                        </span>
-
-                                        } @else {
+                                        }  @else {
                                           <span class="text-gray-500">
                                            There are no added dependencies.
                                         </span>
@@ -252,7 +323,7 @@ import CompoundMap from '../../util/compound-map';
                            <div class="px-3 py-2">
                             <b [class.text-slate-500]="!hasDeletedDeps">{{ "Deleted Dependencies"}}</b>
                             <span [class.text-slate-500]="!hasDeletedDeps" class="toggle" (click)="accordionItem2.toggle()">
-                              &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&ensp;Click to {{ accordionItem2.expanded ? 'close' : 'open' }}
+                              &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&ensp;Click to {{ accordionItem2.expanded ? 'close' : 'open' }}
                             </span>
                           </div>
 
@@ -323,12 +394,7 @@ import CompoundMap from '../../util/compound-map';
 
                                                 
                                               } 
-                                        } @else if (this.left_not_right().size == 0) {
-                                          <span class="text-gray-500">
-                                           Upload a different version of your ontology to view dependency differences.
-                                        </span>
-
-                                        } @else {
+                                        }  @else {
                                           <span class="text-gray-500">
                                            There are no deleted dependencies.
                                         </span>
@@ -347,8 +413,8 @@ import CompoundMap from '../../util/compound-map';
 
                       </cdk-accordion>
 
-          
-                        
+                  }
+                 </div>         
                       
             </div>       
 
@@ -404,6 +470,11 @@ depDetails(dep: string){
         const depDet = new ClassDetailsService(result);
             this.dependencyDetails.set(depDet);
       });
+}
+
+protected displayAllDeps = true;
+onDepChange() { 
+  this.displayAllDeps = !this.displayAllDeps;
 }
 
 
