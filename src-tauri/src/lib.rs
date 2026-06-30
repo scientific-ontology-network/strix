@@ -38,7 +38,7 @@ fn load_ontology<'a>(
             println!("Load ontology");
             let ontology_view = OntologyView::new(&state.ontology);
             println!("Calculate dependencies");
-            let dependencies = SyntacticEmptinessDependency::build_dependencies(state.ontology.i().iter());
+            let dependencies = SyntacticEmptinessDependency::build_dependencies(state.ontology.i().iter(), 1);
             let reduced_dependencies = remove_super_symbols(&dependencies, state.ontology.i().iter());
             let dependencies_views: HashMap<OntologySymbolView, HashSet<OntologySymbolView>> = reduced_dependencies
                 .iter()
@@ -92,7 +92,7 @@ fn dependency_diff<'a>(
         Ok(ontology) => {
             let mut left_not_right = HashMap::new();
             let mut right_not_left = HashMap::new();
-            let right_symbol_dependencies = SyntacticEmptinessDependency::build_dependencies(ontology.i().iter());
+            let right_symbol_dependencies = SyntacticEmptinessDependency::build_dependencies(ontology.i().iter(), 0);
             let reduced_dependencies = remove_super_symbols(&right_symbol_dependencies, state.ontology.i().iter());
             let right_dependencies: &HashMap<_, _> = &reduced_dependencies.into_iter().map(|(k, vm)| (OntologySymbolView::from(&k), vm.into_iter().map(|(k2,vn)| OntologySymbolView::from(&k2)).collect())).collect();
 
