@@ -226,8 +226,8 @@ import CompoundMap from '../../util/compound-map';
 
                            <div class="px-3 py-2">
                             <b [class.text-slate-500]="!hasAddedDeps">{{ "Added Dependencies"}}</b>
-                            <span [class.text-slate-500]="!hasAddedDeps" class="toggle" (click)="accordionItem.toggle()">
-                              &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Click to {{ accordionItem.expanded ? 'close' : 'open' }}
+                            <span [class.text-slate-500]="!hasAddedDeps" class="toggle" style="float: right" (click)="accordionItem.toggle()">
+                              Click to {{ accordionItem.expanded ? 'close' : 'open' }}
                             </span>
                           </div>
 
@@ -322,8 +322,8 @@ import CompoundMap from '../../util/compound-map';
 
                            <div class="px-3 py-2">
                             <b [class.text-slate-500]="!hasDeletedDeps">{{ "Deleted Dependencies"}}</b>
-                            <span [class.text-slate-500]="!hasDeletedDeps" class="toggle" (click)="accordionItem2.toggle()">
-                              &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&ensp;Click to {{ accordionItem2.expanded ? 'close' : 'open' }}
+                            <span [class.text-slate-500]="!hasDeletedDeps" class="toggle" style="float: right" (click)="accordionItem2.toggle()">
+                             Click to {{ accordionItem2.expanded ? 'close' : 'open' }}
                             </span>
                           </div>
 
