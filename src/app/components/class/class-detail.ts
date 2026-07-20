@@ -115,11 +115,11 @@ import CompoundMap from '../../util/compound-map';
           </div>
 
           </div>
-
-        <div class="mt-5 grid grid-cols-1 gap-6">
-          <div class="border-t px-3 py-2 text-sm" *ngIf="this.classDetails()?.dependsOn?.length">
-
-            <span class="text-slate-500">Depends On:</span> <br>
+        
+        
+        <div>
+          <span class="text-sm font-medium text-slate-600 uppercase tracking-wider">Depends On:</span> <br>
+          <div class="px-3 py-2 text-sm" *ngIf="this.classDetails()?.dependsOn?.length">
 
             @let depDiffMissing = (this.left_not_right().size == 0 && this.right_not_left().size == 0);
             
@@ -139,42 +139,45 @@ import CompoundMap from '../../util/compound-map';
                     @switch (dependency.symbol_type) {
                       @case('Class') {
                         <div class="mt-2 rounded-md border border-slate-200">
-                          <div class="px-3 py-2">
-                            <span class="toggle" (click)="ClassAccordionItem.toggle()">
+                          <div class="px-3 py-2 text-sm" style="font-weight: 600">
+                            <app-class-expression [expression]="{'type':'Class','iri':dependency.value}" [labelMap]="ontologyData().labels"
+                                                  (onClassClick)="onClassClick.emit($event)"/>  
+                            <span class="toggle" (click)="ClassAccordionItem.toggle()" style="float: right">
                               {{ ClassAccordionItem.expanded ? '∧' : '∨' }}
-                            </span>
-                            <b>  
-                              <app-class-expression [expression]="{'type':'Class','iri':dependency.value}" [labelMap]="ontologyData().labels"
-                                                    (onClassClick)="onClassClick.emit($event)"/>                           
-                            </b>                          
+                            </span>                                                     
                           </div>
                           <div class="accordion-item-body" role="region" [style.display]="ClassAccordionItem.expanded ? '' : 'none'">
-                            <div class="px-3 py-2"> 
-                              {{"Definition: "  + this.dependencyDetails()?.definition}} 
+                            <div class="px-3 py-2 text-sm text-slate-500"> 
+                              <span class="text-sm font-medium text-slate-700 ">
+                                {{"Definition:"}}
+                              </span>
+                              <br> 
+                              {{this.dependencyDetails()?.definition}}
                             </div>
-                            <div class="px-3 py-2">
-                              {{"Axioms: "}} <br>
+                            <div class="px-3 py-2 ext-sm text-slate-500">
+                              <span class="text-sm font-medium text-slate-700 ">
+                              {{"Axioms: "}} 
+                              </span>
+                              <br>
                               @for (p of this.dependencyDetails()?.superclasses; track $index) {
-                                {{"SubclassOf "}}
+                                <span class="text-sm font-medium">{{"SubclassOf "}}</span>
                                 <app-class-expression [expression]="p" [labelMap]="ontologyData().labels"/><br>
                               }
                               @for (p of this.dependencyDetails()?.equivalentTo; track $index) {
-                              {{"EquivalentTo "}}
-                              <app-class-expression [expression]="p" [labelMap]="ontologyData().labels"/><br>
+                                <span class="text-sm font-medium"> {{"EquivalentTo "}} </span>
+                                <app-class-expression [expression]="p" [labelMap]="ontologyData().labels"/><br>
                               }
                             </div>
                           </div>
                         </div>
                       } @case('Role') {
                         <div class="mt-2 rounded-md border border-slate-200">        
-                          <div class="px-3 py-2">
-                            <span class="toggle" (click)="ClassAccordionItem.toggle()">
+                          <div class="px-3 py-2" style="font-weight: 600">
+                            <app-object-property-expression [expression]="{'type':'ObjectProperty','iri':dependency.value}" [labelMap]="ontologyData().labels"
+                                                            (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/>     
+                            <span class="toggle" (click)="ClassAccordionItem.toggle()" style="float: right">
                               {{ ClassAccordionItem.expanded ? '∧' : '∨' }}
-                            </span>
-                            <b>  
-                              <app-object-property-expression [expression]="{'type':'ObjectProperty','iri':dependency.value}" [labelMap]="ontologyData().labels"
-                                                              (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/>                           
-                            </b>
+                            </span>                         
                           </div>
                           <div class="accordion-item-body" role="region" [style.display]="ClassAccordionItem.expanded ? '' : 'none'">
                             <div class="px-3 py-2"> 
@@ -208,28 +211,32 @@ import CompoundMap from '../../util/compound-map';
                           @for (dep of hasAddedDeps; track $index) {
                             <cdk-accordion-item #ClassAccordionItem ="cdkAccordionItem" (opened)="depDetails(dep.value)">
                               <div class="mt-2 rounded-md border border-slate-200">
-                                <div class="px-3 py-2">
-                                  <span class="toggle" (click)="ClassAccordionItem.toggle()">
+                                <div class="px-3 py-2"  style="font-weight: 600">
+                                  <app-class-expression [expression]="{'type':'Class','iri':dep.value}" [labelMap]="ontologyData().labels"
+                                                        (onClassClick)="onClassClick.emit($event)"
+                                                        (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/>    
+                                  <span class="toggle" (click)="ClassAccordionItem.toggle()" style="float: right">
                                     {{ ClassAccordionItem.expanded ? '∧' : '∨' }}
-                                  </span>
-                                  <b>  
-                                    <app-class-expression [expression]="{'type':'Class','iri':dep.value}" [labelMap]="ontologyData().labels"
-                                                          (onClassClick)="onClassClick.emit($event)"
-                                                          (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/>                                    
-                                  </b>
+                                  </span>                                
                                 </div>
                                 <div class="accordion-item-body" role="region" [style.display]="ClassAccordionItem.expanded ? '' : 'none'">
-                                  <div class="px-3 py-2">
-                                    {{"Definition: "  + this.dependencyDetails()?.definition}}
+                                  <div class="px-3 py-2 text-sm text-slate-500">
+                                    <span class="text-sm font-medium text-slate-700 ">
+                                      {{"Definition:"}}
+                                    </span> 
+                                    <br> 
+                                    {{this.dependencyDetails()?.definition}}
                                   </div>
-                                  <div class="px-3 py-2">
-                                    {{"Axioms: "}} <br>
+                                  <div class="px-3 py-2 text-sm text-slate-500">
+                                    <span class="text-sm font-medium text-slate-700 ">
+                                      {{"Axioms: "}} <br>
+                                    </span> 
                                     @for (p of this.dependencyDetails()?.superclasses; track $index) {
-                                      {{"SubclassOf "}}
+                                      <span class="text-sm font-medium"> {{"SubclassOf "}} </span>
                                       <app-class-expression [expression]="p" [labelMap]="ontologyData().labels"/> <br>
                                     }
                                     @for (p of this.dependencyDetails()?.equivalentTo; track $index) {
-                                      {{"EquivalentTo "}}
+                                      <span class="text-sm font-medium"> {{"EquivalentTo "}} </span>
                                       <app-class-expression [expression]="p" [labelMap]="ontologyData().labels"/> <br>
                                     }
                                   </div>
@@ -264,28 +271,32 @@ import CompoundMap from '../../util/compound-map';
                             @for (dep of hasDeletedDeps; track $index) {
                               <cdk-accordion-item #ClassAccordionItem ="cdkAccordionItem" (opened)="depDetails(dep.value)">
                                 <div class="mt-2 rounded-md border border-slate-200">
-                                  <div class="px-3 py-2">
-                                    <span class="toggle" (click)="ClassAccordionItem.toggle()">
+                                  <div class="px-3 py-2"  style="font-weight: 600">
+                                    <app-class-expression [expression]="{'type':'Class','iri':dep.value}" [labelMap]="ontologyData().labels"
+                                                          (onClassClick)="onClassClick.emit($event)"
+                                                          (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/>    
+                                    <span class="toggle" (click)="ClassAccordionItem.toggle()" style="float: right">
                                       {{ ClassAccordionItem.expanded ? '∧' : '∨' }}
-                                    </span>
-                                    <b>  
-                                      <app-class-expression [expression]="{'type':'Class','iri':dep.value}" [labelMap]="ontologyData().labels"
-                                                            (onClassClick)="onClassClick.emit($event)"
-                                                            (onObjectPropertyClick)="onObjectPropertyClick.emit($event)"/>                                    
-                                    </b>
+                                    </span>                                
                                   </div>
                                   <div class="accordion-item-body" role="region" [style.display]="ClassAccordionItem.expanded ? '' : 'none'">
-                                    <div class="px-3 py-2">
-                                      {{"Definition: "  + this.dependencyDetails()?.definition}}
+                                    <div class="px-3 py-2 text-sm text-slate-500">
+                                      <span class="text-sm font-medium text-slate-700 ">
+                                        {{"Definition:"}}
+                                      </span> 
+                                      <br> 
+                                      {{this.dependencyDetails()?.definition}}
                                     </div>
-                                    <div class="px-3 py-2">
-                                      {{"Axioms: "}} <br>
+                                    <div class="px-3 py-2 text-sm text-slate-500">
+                                      <span class="text-sm font-medium text-slate-700 ">
+                                        {{"Axioms: "}} <br>
+                                      </span> 
                                       @for (p of this.dependencyDetails()?.superclasses; track $index) {
-                                        {{"SubclassOf "}}
+                                        <span class="text-sm font-medium"> {{"SubclassOf "}} </span>
                                         <app-class-expression [expression]="p" [labelMap]="ontologyData().labels"/> <br>
                                       }
                                       @for (p of this.dependencyDetails()?.equivalentTo; track $index) {
-                                        {{"EquivalentTo "}}
+                                        <span class="text-sm font-medium"> {{"EquivalentTo "}} </span>
                                         <app-class-expression [expression]="p" [labelMap]="ontologyData().labels"/> <br>
                                       }
                                     </div>
