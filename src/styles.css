@@ -3,3 +3,10 @@
 @layer base {
   html, body { @apply h-full; }
 }
+
+.tooltip-style{
+  background: rgba(75, 75, 75, 0.8);
+  color: white;
+  font-size: 80%;
+  white-space: pre-line;
+}

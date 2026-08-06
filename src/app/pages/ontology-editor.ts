@@ -1,6 +1,7 @@
 import {Component, computed, inject, signal, Signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import {HierarchyTreeComponent} from '../components/hierarchy-tree';
 import {ClassDetailComponent} from '../components/class/class-detail';
 import {OntologyService} from '../services/ontology.service';
@@ -13,7 +14,7 @@ import CompoundMap from "../util/compound-map";
 @Component({
   selector: 'app-ontology-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, HierarchyTreeComponent, ClassDetailComponent],
+  imports: [CommonModule, FormsModule, HierarchyTreeComponent, ClassDetailComponent, MatTooltipModule],
   template: `
     <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 text-slate-900">
       <!-- Top Bar -->
@@ -28,11 +29,13 @@ import CompoundMap from "../util/compound-map";
               </div>
             </div>
             <nav class="flex items-center gap-2">
-              <button class="px-3 py-1.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-sm shadow-sm transition" (click)="open()">Open…</button>
+              <button class="px-3 py-1.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-sm shadow-sm transition" (click)="open()"  
+              matTooltipClass="tooltip-style" matTooltip="Upload an ontology">Open…</button>
             </nav>
             @if(svc.ontologyData().classRoots) {
               <nav class="flex items-center gap-2">
-                <button class="px-3 py-1.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-sm shadow-sm transition" (click)="compare()">Compare</button>
+                <button class="px-3 py-1.5 rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-sm shadow-sm transition" (click)="compare()"
+                matTooltipClass="tooltip-style" matTooltip="Upload a second ontology to view dependency changes between two versions \n \n (Use the open button to upload the first ontology)">Compare</button>
               </nav>
             }
           </div>
