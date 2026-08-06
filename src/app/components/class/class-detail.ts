@@ -123,15 +123,30 @@ import CompoundMap from '../../util/compound-map';
 
             @let depDiffMissing = (this.left_not_right().size == 0 && this.right_not_left().size == 0);
             
-            <mat-slide-toggle [disabled]="depDiffMissing" (change)="onDepChange()">
-              @if(depDiffMissing){
-                <span class="text-gray-500"> Upload a different version of your ontology to view dependency differences.</span>
+            @if(depDiffMissing){
+                <span class="ml-3 text-sm font-medium text-gray-400"> Upload a different version of your ontology to view dependency differences.</span>
               } @else {
-                Show dependency differences
+                <button title="Copy" class="px-1 py-1 absolute right-2 top-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4D4D8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy">
+                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                  </svg>
+                </button>
+                <label class="relative inline-flex cursor-pointer items-center">
+                  <div class="h-6"> </div>
+                  <span class="ml-3 text-sm font-medium text-gray-400"> Show only original dependencies </span>
+                  <div class="w-2"> </div>
+                </label>
+                <label class="relative inline-flex cursor-pointer items-center">
+                  <input type="checkbox" value="" class="peer sr-only" (change)="onDepChange()" checked/>
+                  <div class="peer h-6 w-11 rounded-full bg-gray-300 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-400 peer-checked:after:translate-x-full peer-checked:after:border-white "></div>
+                  <span class="ml-3 text-sm font-medium text-gray-400"> Compare with other ontology </span>
+                </label>
               }
-            </mat-slide-toggle>
 
-            @if(this.displayAllDeps){
+            
+
+            @if(this.displayAllDeps || depDiffMissing){
 
               <cdk-accordion class="accordion">
                 @for (dependency of this.classDetails()?.dependsOn; track $index){  
@@ -374,11 +389,12 @@ export class ClassDetailComponent implements OnChanges{
         });
   }
 
-  protected displayAllDeps = true;
+  protected displayAllDeps = false;
   onDepChange() { 
     this.displayAllDeps = !this.displayAllDeps;
   }
 
+  
 
   ngOnDestroy() {
     this.effectRef.destroy();
