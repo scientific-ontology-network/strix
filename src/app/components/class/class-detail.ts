@@ -20,7 +20,6 @@ import {OntologySymbolView} from "../../bindings/OntologySymbolView";
 import {AnnotationValueComponent} from "../annotation/annotation-value";
 import {ObjectPropertyExpressionComponent} from "../property/object_property";
 import {CdkAccordionModule} from '@angular/cdk/accordion';
-import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 import { OntologyEditorComponent } from '../../pages/ontology-editor';
 import CompoundMap from '../../util/compound-map';
 
@@ -28,7 +27,7 @@ import CompoundMap from '../../util/compound-map';
 @Component({
   selector: 'app-class-detail',
   standalone: true,
-  imports: [CommonModule, ClassExpressionComponent, ObjectPropertyExpressionComponent, AnnotationValueComponent, ObjectPropertyExpressionComponent, CdkAccordionModule, MatSlideToggleModule],
+  imports: [CommonModule, ClassExpressionComponent, ObjectPropertyExpressionComponent, AnnotationValueComponent, ObjectPropertyExpressionComponent, CdkAccordionModule],
   preserveWhitespaces: true,
   template: `
     <div class="p-6">
