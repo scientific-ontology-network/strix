@@ -10,7 +10,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
-  BIN_NAME: strix
+  BIN_NAME: src-tauri
 
 jobs:
   build:
