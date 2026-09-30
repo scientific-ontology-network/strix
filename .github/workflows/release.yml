@@ -10,7 +10,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
-  BIN_NAME: src-tauri
+  BIN_NAME: strix
 
 jobs:
   build:
@@ -73,6 +73,7 @@ jobs:
       # Build
       # -----------------------------
       - name: Build
+        working-directory: ./src-tauri
         run: cargo build --release --target ${{ matrix.target }}
 
       # -----------------------------
