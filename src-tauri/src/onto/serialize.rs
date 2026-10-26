@@ -127,6 +127,14 @@ pub enum AnnotationValueView {
     AnonymousIndividual(String),
 }
 
+impl<T: ForIRI> From<&Class<T>> for ClassExpressionView {
+    fn from(class: &Class<T>) -> Self {
+        ClassExpressionView::Class {
+            iri: class.0.to_string(),
+        }
+    }
+}
+
 // Conversion implementations
 impl<T: ForIRI> From<&ClassExpression<T>> for ClassExpressionView {
     fn from(expr: &ClassExpression<T>) -> Self {
@@ -225,6 +233,14 @@ impl<T: ForIRI> From<&ClassExpression<T>> for ClassExpressionView {
                     data_range: dr.into(),
                 }
             }
+        }
+    }
+}
+
+impl<T: ForIRI> From<&ObjectProperty<T>> for ObjectPropertyExpressionView {
+    fn from(property: &ObjectProperty<T>) -> Self {
+        ObjectPropertyExpressionView::ObjectProperty {
+            iri: property.0.to_string(),
         }
     }
 }
@@ -348,7 +364,9 @@ impl<'a, T: ForIRI> From<&Term<'a, T>> for OntologyTermView {
             ),
             Term::InverseRole(p) => {
                 OntologyTermView::InverseRole(ObjectPropertyExpressionView::from(*p))
-            }
+            },
+            Term::Class(c) => OntologyTermView::ClassExpression(ClassExpressionView::from(*c)),
+            Term::ObjectProperty(p) => OntologyTermView::RoleExpression(ObjectPropertyExpressionView::from(*p)),
         }
     }
 }
