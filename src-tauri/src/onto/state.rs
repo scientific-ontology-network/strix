@@ -1,15 +1,8 @@
-use crate::onto::owl::class::ClassDetails;
-use crate::onto::owl::hierarchy::OntologyView;
 use crate::onto::serialize::OntologySymbolView;
-use horned_owl::model::{ArcStr, ClassExpression, Component, ForIRI, Individual, ObjectPropertyExpression};
+use horned_owl::model::ForIRI;
 use horned_owl::ontology::set::SetOntology;
-use serde::de::Unexpected::Str;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
-use strix_roost::dependency::base::{invert_map, remove_super_symbols, DependencyBuilder};
-use strix_roost::dependency::growth::GrowthDependency;
-use strix_roost::dependency::symbol::{Symbol, Term};
-use strix_roost::ontology::visitor::AxiomVisitor;
 
 #[derive(Default)]
 pub struct StrixState<T>
