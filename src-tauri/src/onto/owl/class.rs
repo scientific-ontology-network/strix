@@ -1,12 +1,12 @@
 use crate::onto::serialize::{
-    AnnotationValueView, ClassExpressionView, IndividualView, OntologySymbolView,
+    AnnotationValueView, ClassExpressionView, IndividualView,
 };
 use horned_owl::model::{
     Annotation, AnnotationSubject, Class, ClassExpression, ForIRI, Individual, SubClassOf,
 };
 use serde::ser::SerializeStruct;
 use serde::{Serialize, Serializer};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use strix_roost::ontology::visitor::AxiomVisitor;
 
 pub struct ClassDetails<T>
